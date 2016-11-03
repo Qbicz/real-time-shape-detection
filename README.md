@@ -15,3 +15,5 @@ http://forum.odroid.com/viewtopic.php?f=95&t=5559
 
 #OpenCL introdution:
 http://www.drdobbs.com/parallel/a-gentle-introduction-to-opencl/231002854
+https://people.maths.ox.ac.uk/gilesm/cuda/new_lectures/lec1.pdf
+https://people.maths.ox.ac.uk/gilesm/cuda/new_lectures/lec2.pdf

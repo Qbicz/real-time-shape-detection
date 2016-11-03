@@ -1,0 +1,38 @@
+Host app written in C/C++ dispatches kernels to connected devices.
+Every host app requires five data structs:
+cl_device_id, 
+cl_kernel, 
+cl_program, 
+cl_command_queue,
+cl_context.
+
+To take advantage of these parallel-processing capabilities in code, an OpenCL developer needs to clearly understand two points:
+
+    The OpenCL Execution Model: Kernels are executed by one or more work-items. Work-items are collected into work-groups and each work-group executes on a compute unit.
+    The OpenCL Memory Model: Kernel data must be specifically placed in one of four address spaces — global memory, constant memory, local memory, or private memory. The location of the data determines how quickly it can be processed.
+
+
+Each work-item has two IDs: a global ID and a local ID. The global ID identifies the work-item among all other work-items executing the kernel. The local ID identifies the work-item among other work-items in the work-group
+
+The OpenCL device model identifies four address spaces:
+
+    Global memory: Stores data for the entire device.
+    Constant memory: Similar to global memory, but is read-only.
+    Local memory: Stores data for the work-items in a work-group.
+    Private memory: Stores data for an individual work-item.
+
+
+
+
+Idea behind the OpenCL:
+Key hardware feature is that the cores in an SMX are SIMT
+(Single Instruction Multiple Threads) cores:
+- all cores execute the same instructions simultaneously,
+but with different data
+- similar to vector computing on CRAY supercomputers
+- minimum of 32 threads all doing the same thing at
+(almost) the same time
+- natural for graphics processing and much scientific
+computing
+- SIMT is also a natural choice for many-core chips to
+simplify each core
