@@ -1,0 +1,13 @@
+# Compile with:
+g++ segmentation.cpp -Wall -Werror -std=c++11 `pkg-config --cflags --libs opencv` -o segm
+
+# or
+# with 'make hough'
+
+# Run with (example)
+./hough ./img/test1.ppm 3 1
+
+# or
+# redirect compilation output to less:
+less < <(make 2>&1)
+
