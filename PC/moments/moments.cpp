@@ -54,6 +54,14 @@ void thresh_callback(int, void* )
   for( int i = 0; i < contours.size(); i++ )
      { mu[i] = moments( contours[i], false ); }
 
+  /// Compute Hu moments (not used yet)
+  Moments mom = mu[0];
+  double hu[7];
+  HuMoments(mom, hu);
+  printf("Hu invariants for first contour:\n");
+  for( int i = 0; i < 7; i++ )
+     printf("[%d]=%.2f ", i, hu[i]);
+     
   ///  Get the mass centers:
   vector<Point2f> mc( contours.size() );
   for( int i = 0; i < contours.size(); i++ )

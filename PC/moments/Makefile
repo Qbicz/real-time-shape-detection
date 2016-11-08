@@ -1,5 +1,5 @@
 CXX=g++
-CXXFLAGS=-Wall -std=c++11 `pkg-config --cflags --libs opencv`
+CXXFLAGS= -std=c++11 `pkg-config --cflags --libs opencv`
 DEPS = 
 OBJ = moments.o
 
@@ -23,3 +23,4 @@ welcome:
 # (useful when debugging)
 # redirect compilation output to less:
 # less < <(make 2>&1)
+
