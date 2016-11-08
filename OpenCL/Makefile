@@ -1,8 +1,7 @@
 PROJ=add_numbers
 
 CC=gcc
-LIBOPENCLSO_PATH=/opt/AMDAPPSDK-3.0/lib/x86_64/sdk
-CFLAGS=-std=c99 -Wall -DUNIX -g -DDEBUG -L${LIBOPENCLSO_PATH}
+CFLAGS=-std=c99 -Wall -DUNIX -g -DDEBUG
 
 # Check for 32-bit vs 64-bit
 PROC_TYPE = $(strip $(shell uname -m | grep 64))
