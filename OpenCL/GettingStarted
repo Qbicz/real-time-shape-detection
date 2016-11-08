@@ -1,0 +1,19 @@
+#OpenCL installation process
+
+1. Download latest AMD APP SDK
+
+2. Follow the instructions in pdf
+
+After all I need to manually perform the steps:
+
+set PATH to have libOpenCL.so
+
+create /etc/ld.so.conf.d/amdapp_x86_64.conf  
+
+with entries:
+
+/opt/AMDAPPSDK-3.0/lib/x86_64/
+/opt/AMDAPPSDK-3.0/lib/x86_64/sdk
+
+
+run sudo ldconfig
