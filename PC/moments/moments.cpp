@@ -18,6 +18,8 @@ void thresh_callback(int, void* );
 /** @function main */
 int main( int argc, char** argv )
 {
+  // TODO: check for argc < 2
+
   /// Load source image and convert it to gray
   src = imread( argv[1], 1 );
 
