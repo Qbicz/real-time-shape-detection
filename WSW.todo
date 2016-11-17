@@ -21,3 +21,14 @@ Uruchomienie ODROIDA:
 - 
 - "Freeing unused kernel memory: 424K ()"
 
+Pdf Analyzing Hu Moments:
+
+Ogólnie pdf jest na temat wplywu operacji na obrazie (zwiekszania, zmniejszania, rotacji, transformacji)
+na bledy w obliczaniu momentow
+
+1. Obrazy nie sa idealne - maja szumy
+2. Opis momentow: generalnie, centralnych, znormalizowanych centralnych.
+3. Bazujac na znormalizowanych momentach HU wprowadzil 7 momentow niezmienniczych
+
+
+Posciagalem mase pdfow
