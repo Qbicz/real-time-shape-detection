@@ -1,6 +1,6 @@
 WSW TODO:
 - przygotować obrazy i program OpenCV do sprawdzenia czy momenty Hu nie zmieniają się zależnie od obrotu i wielkości
-- wykonywanie PCA dla ruchomego obrazu z kamery: merge kodu camera i pca
+- wykonywanie PCA dla ruchomego obrazu z kamery
 - analiza PDF
 - przejrzeć przykłady https://github.com/opencv/opencv/tree/master/samples - zwłaszcza foldery gpu, opencl
 
