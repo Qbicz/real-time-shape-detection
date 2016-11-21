@@ -17,3 +17,9 @@ with entries:
 
 
 run sudo ldconfig
+
+
+To compile examples in OpenCl the linker need to know where libOpenCL.so.1 is
+so best way is to create a symlink 
+
+sudo ln -s /opt/AMDAPPSDK-3.0/lib/x86_64/sdk/libOpenCL.so.1 /usr/lib/libOpenCL.so.1
