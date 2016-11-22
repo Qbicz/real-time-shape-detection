@@ -23,3 +23,19 @@ To compile examples in OpenCl the linker need to know where libOpenCL.so.1 is
 so best way is to create a symlink 
 
 sudo ln -s /opt/AMDAPPSDK-3.0/lib/x86_64/sdk/libOpenCL.so.1 /usr/lib/libOpenCL.so.1
+
+
+
+######################## ODROID ##########################
+https://wiki.qt.io/ODROID-XU3#OpenCL
+http://forum.odroid.com/viewtopic.php?f=95&t=5559
+http://forum.odroid.com/viewtopic.php?f=99&t=6653
+http://granolamatt.com/working/2015/02/configure-opencl-on-odroid-xu3/
+
+
+https://community.arm.com/thread/8394
+https://github.com/OpenKinect/libfreenect2/issues/453
+https://github.com/OpenKinect/libfreenect2/issues/377
+
+https://packages.debian.org/wheezy/amd-opencl-icd
+https://packages.debian.org/wheezy/libopencl1
