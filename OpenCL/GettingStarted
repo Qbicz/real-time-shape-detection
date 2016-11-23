@@ -1,5 +1,7 @@
-#OpenCL installation process
+### OpenCL installation process
 
+
+# on Ubuntu (alternatively Elementary OS)
 1. Download latest AMD APP SDK
 
 2. Follow the instructions in pdf
@@ -15,14 +17,23 @@ with entries:
 /opt/AMDAPPSDK-3.0/lib/x86_64/
 /opt/AMDAPPSDK-3.0/lib/x86_64/sdk
 
-
 run sudo ldconfig
-
 
 To compile examples in OpenCl the linker need to know where libOpenCL.so.1 is
 so best way is to create a symlink 
 
 sudo ln -s /opt/AMDAPPSDK-3.0/lib/x86_64/sdk/libOpenCL.so.1 /usr/lib/libOpenCL.so.1
+
+# on ODROID
+
+
+tar zxf Mali_OpenCL_SDK_v1.1.0.0a36a7_Linux.tgz
+cd Mali_OpenCL_SDK_v1.1.0/
+
+t up and running, get the standard OpenCL 1.1 headers from Khronos (or from some other vendor's SDK) as they do not seem to be present in the sysroot by default. You will then have to symlink /usr/lib/arm-linux-gnueabihf/fbdev-egl/libmali.so (note: _not_ libOpenCL.so which seems to be some empty shim) to /usr/lib/libOpenCL.so. Once this is done, you should be able to build CL apps. 
+
+
+
 
 
 
@@ -39,3 +50,14 @@ https://github.com/OpenKinect/libfreenect2/issues/377
 
 https://packages.debian.org/wheezy/amd-opencl-icd
 https://packages.debian.org/wheezy/libopencl1
+
+#Odroid XU4 user manual
+http://magazine.odroid.com/wp-content/uploads/odroid-xu4-user-manual.pdf
+
+#OpenCL introduction:
+http://www.drdobbs.com/parallel/a-gentle-introduction-to-opencl/231002854
+https://people.maths.ox.ac.uk/gilesm/cuda/new_lectures/lec1.pdf
+https://people.maths.ox.ac.uk/gilesm/cuda/new_lectures/lec2.pdf
+
+#Przykaldy ze strony MALI SDK
+http://malideveloper.arm.com/downloads/deved/tutorial/SDK/opencl/tutorials.html
