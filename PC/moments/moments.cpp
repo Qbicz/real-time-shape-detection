@@ -8,7 +8,7 @@ using namespace cv;
 using namespace std;
 
 Mat src; Mat src_gray;
-int thresh = 100;
+int thresh = 150;
 int max_thresh = 255;
 RNG rng(12345);
 
@@ -56,13 +56,17 @@ void thresh_callback(int, void* )
   for( int i = 0; i < contours.size(); i++ )
      { mu[i] = moments( contours[i], false ); }
 
-  /// Compute Hu moments (not used yet)
-  Moments mom = mu[0];
-  double hu[7];
-  HuMoments(mom, hu);
-  printf("Hu invariants for first contour:\n");
-  for( int i = 0; i < 7; i++ )
-     printf("[%d]=%.2f ", i, hu[i]);
+  /// Compute Hu moments - use to tell the difference between mirrored objects/rotated 180 degrees
+  for( int i = 0; i < contours.size(); i++)
+  {
+      Moments mom = mu[i];
+      double hu[7];
+      HuMoments(mom, hu);
+      printf("Hu invariants for contour %d:\n", i);
+      for( int i = 0; i < 7; i++ )
+         printf("[%d]=%.4e ", i+1, hu[i]);
+      printf("\n");
+  }
      
   ///  Get the mass centers:
   vector<Point2f> mc( contours.size() );
