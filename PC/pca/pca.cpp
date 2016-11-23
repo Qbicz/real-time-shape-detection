@@ -1,191 +1,146 @@
-/*
-* pca.cpp
-*
-*  Author:
-*  Kevin Hughes <kevinhughes27[at]gmail[dot]com>
-*
-*  Special Thanks to:
-*  Philipp Wagner <bytefish[at]gmx[dot]de>
-*
-* This program demonstrates how to use OpenCV PCA with a
-* specified amount of variance to retain. The effect
-* is illustrated further by using a trackbar to
-* change the value for retained varaince.
-*
-* The program takes as input a text file with each line
-* begin the full path to an image. PCA will be performed
-* on this list of images. The author recommends using
-* the first 15 faces of the AT&T face data set:
-* http://www.cl.cam.ac.uk/research/dtg/attarchive/facedatabase.html
-*
-* so for example your input text file would look like this:
-*
-*        <path_to_at&t_faces>/orl_faces/s1/1.pgm
-*        <path_to_at&t_faces>/orl_faces/s2/1.pgm
-*        <path_to_at&t_faces>/orl_faces/s3/1.pgm
-*        <path_to_at&t_faces>/orl_faces/s4/1.pgm
-*        <path_to_at&t_faces>/orl_faces/s5/1.pgm
-*        <path_to_at&t_faces>/orl_faces/s6/1.pgm
-*        <path_to_at&t_faces>/orl_faces/s7/1.pgm
-*        <path_to_at&t_faces>/orl_faces/s8/1.pgm
-*        <path_to_at&t_faces>/orl_faces/s9/1.pgm
-*        <path_to_at&t_faces>/orl_faces/s10/1.pgm
-*        <path_to_at&t_faces>/orl_faces/s11/1.pgm
-*        <path_to_at&t_faces>/orl_faces/s12/1.pgm
-*        <path_to_at&t_faces>/orl_faces/s13/1.pgm
-*        <path_to_at&t_faces>/orl_faces/s14/1.pgm
-*        <path_to_at&t_faces>/orl_faces/s15/1.pgm
-*
-*/
+/**
+ * @file introduction_to_pca.cpp
+ * @brief This program demonstrates how to use OpenCV PCA to extract the orienation of an object
+ * @author OpenCV team
+ */
 
 #include <iostream>
-#include <fstream>
-#include <sstream>
+#include <opencv2/opencv.hpp>
 
-#include <opencv2/core/core.hpp>
-#include "opencv2/imgcodecs.hpp"
-#include <opencv2/highgui/highgui.hpp>
-
-using namespace cv;
 using namespace std;
+using namespace cv;
 
-///////////////////////
-// Functions
-static void read_imgList(const string& filename, vector<Mat>& images) {
-    std::ifstream file(filename.c_str(), ifstream::in);
-    if (!file) {
-        string error_message = "No valid input file was given, please check the given filename.";
-        CV_Error(Error::StsBadArg, error_message);
-    }
-    string line;
-    while (getline(file, line)) {
-        images.push_back(imread(line, 0));
-    }
+// Function declarations
+void drawAxis(Mat&, Point, Point, Scalar, const float);
+double getOrientation(const vector<Point> &, Mat&);
+
+/**
+ * @function drawAxis
+ */
+void drawAxis(Mat& img, Point p, Point q, Scalar colour, const float scale = 0.2)
+{
+//! [visualization1]
+    double angle;
+    double hypotenuse;
+    angle = atan2( (double) p.y - q.y, (double) p.x - q.x ); // angle in radians
+    hypotenuse = sqrt( (double) (p.y - q.y) * (p.y - q.y) + (p.x - q.x) * (p.x - q.x));
+//    double degrees = angle * 180 / CV_PI; // convert radians to degrees (0-180 range)
+//    cout << "Degrees: " << abs(degrees - 180) << endl; // angle in 0-360 degrees range
+
+    // Here we lengthen the arrow by a factor of scale
+    q.x = (int) (p.x - scale * hypotenuse * cos(angle));
+    q.y = (int) (p.y - scale * hypotenuse * sin(angle));
+    line(img, p, q, colour, 1, CV_AA);
+
+    // create the arrow hooks
+    p.x = (int) (q.x + 9 * cos(angle + CV_PI / 4));
+    p.y = (int) (q.y + 9 * sin(angle + CV_PI / 4));
+    line(img, p, q, colour, 1, CV_AA);
+
+    p.x = (int) (q.x + 9 * cos(angle - CV_PI / 4));
+    p.y = (int) (q.y + 9 * sin(angle - CV_PI / 4));
+    line(img, p, q, colour, 1, CV_AA);
+//! [visualization1]
 }
 
-static  Mat formatImagesForPCA(const vector<Mat> &data)
+/**
+ * @function getOrientation
+ */
+double getOrientation(const vector<Point> &pts, Mat &img)
 {
-    Mat dst(static_cast<int>(data.size()), data[0].rows*data[0].cols, CV_32F);
-    for(unsigned int i = 0; i < data.size(); i++)
+//! [pca]
+    //Construct a buffer used by the pca analysis
+    int sz = static_cast<int>(pts.size());
+    Mat data_pts = Mat(sz, 2, CV_64FC1);
+    for (int i = 0; i < data_pts.rows; ++i)
     {
-        Mat image_row = data[i].clone().reshape(1,1);
-        Mat row_i = dst.row(i);
-        image_row.convertTo(row_i,CV_32F);
+        data_pts.at<double>(i, 0) = pts[i].x;
+        data_pts.at<double>(i, 1) = pts[i].y;
     }
-    return dst;
-}
 
-static Mat toGrayscale(InputArray _src) {
-    Mat src = _src.getMat();
-    // only allow one channel
-    if(src.channels() != 1) {
-        CV_Error(Error::StsBadArg, "Only Matrices with one channel are supported");
-    }
-    // create and return normalized image
-    Mat dst;
-    cv::normalize(_src, dst, 0, 255, NORM_MINMAX, CV_8UC1);
-    return dst;
-}
+    //Perform PCA analysis
+    PCA pca_analysis(data_pts, Mat(), CV_PCA_DATA_AS_ROW);
 
-struct params
-{
-    Mat data;
-    int ch;
-    int rows;
-    PCA pca;
-    string winName;
-};
+    //Store the center of the object
+    Point cntr = Point(static_cast<int>(pca_analysis.mean.at<double>(0, 0)),
+                      static_cast<int>(pca_analysis.mean.at<double>(0, 1)));
 
-static void onTrackbar(int pos, void* ptr)
-{
-    cout << "Retained Variance = " << pos << "%   ";
-    cout << "re-calculating PCA..." << std::flush;
-
-    double var = pos / 100.0;
-
-    struct params *p = (struct params *)ptr;
-
-    p->pca = PCA(p->data, cv::Mat(), PCA::DATA_AS_ROW, var);
-
-    Mat point = p->pca.project(p->data.row(0));
-    Mat reconstruction = p->pca.backProject(point);
-    reconstruction = reconstruction.reshape(p->ch, p->rows);
-    reconstruction = toGrayscale(reconstruction);
-
-    imshow(p->winName, reconstruction);
-    cout << "done!   # of principal components: " << p->pca.eigenvectors.rows << endl;
-}
-
-
-///////////////////////
-// Main
-int main(int argc, char** argv)
-{
-    cv::CommandLineParser parser(argc, argv, "{@input||image list}{help h||show help message}");
-    if (parser.has("help"))
+    //Store the eigenvalues and eigenvectors
+    vector<Point2d> eigen_vecs(2);
+    vector<double> eigen_val(2);
+    for (int i = 0; i < 2; ++i)
     {
-        parser.printMessage();
-        exit(0);
+        eigen_vecs[i] = Point2d(pca_analysis.eigenvectors.at<double>(i, 0),
+                                pca_analysis.eigenvectors.at<double>(i, 1));
+
+        eigen_val[i] = pca_analysis.eigenvalues.at<double>(0, i);
     }
-    // Get the path to your CSV.
-    string imgList = parser.get<string>("@input");
-    if (imgList.empty())
+
+//! [pca]
+//! [visualization]
+    // Draw the principal components
+    circle(img, cntr, 3, Scalar(255, 0, 255), 2);
+    Point p1 = cntr + 0.02 * Point(static_cast<int>(eigen_vecs[0].x * eigen_val[0]), static_cast<int>(eigen_vecs[0].y * eigen_val[0]));
+    Point p2 = cntr - 0.02 * Point(static_cast<int>(eigen_vecs[1].x * eigen_val[1]), static_cast<int>(eigen_vecs[1].y * eigen_val[1]));
+    drawAxis(img, cntr, p1, Scalar(0, 255, 0), 1);
+    drawAxis(img, cntr, p2, Scalar(255, 255, 0), 5);
+
+    double angle = atan2(eigen_vecs[0].y, eigen_vecs[0].x); // orientation in radians
+//! [visualization]
+
+    return angle;
+}
+
+/**
+ * @function main
+ */
+int main(int, char** argv)
+{
+//! [pre-process]
+    // Load image
+//    Mat src = imread("pca_test1.jpg");
+    Mat src = imread(argv[1]);
+
+    // Check if image is loaded successfully
+    if(!src.data || src.empty())
     {
-        parser.printMessage();
-        exit(1);
+        cout << "Problem loading image!!!" << endl;
+        return EXIT_FAILURE;
     }
 
-    // vector to hold the images
-    vector<Mat> images;
+    imshow("src", src);
 
-    // Read in the data. This can fail if not valid
-    try {
-        read_imgList(imgList, images);
-    } catch (cv::Exception& e) {
-        cerr << "Error opening file \"" << imgList << "\". Reason: " << e.msg << endl;
-        exit(1);
+    // Convert image to grayscale
+    Mat gray;
+    cvtColor(src, gray, COLOR_BGR2GRAY);
+
+    // Convert image to binary
+    Mat bw;
+    threshold(gray, bw, 50, 255, CV_THRESH_BINARY | CV_THRESH_OTSU);
+//! [pre-process]
+
+//! [contours]
+    // Find all the contours in the thresholded image
+    vector<Vec4i> hierarchy;
+    vector<vector<Point> > contours;
+    findContours(bw, contours, hierarchy, CV_RETR_LIST, CV_CHAIN_APPROX_NONE);
+
+    for (size_t i = 0; i < contours.size(); ++i)
+    {
+        // Calculate the area of each contour
+        double area = contourArea(contours[i]);
+        // Ignore contours that are too small or too large
+        if (area < 1e2 || 1e5 < area) continue;
+
+        // Draw each contour only for visualisation purposes
+        drawContours(src, contours, static_cast<int>(i), Scalar(0, 0, 255), 2, 8, hierarchy, 0);
+        // Find the orientation of each shape
+        getOrientation(contours[i], src);
     }
+//! [contours]
 
-    // Quit if there are not enough images for this demo.
-    if(images.size() <= 1) {
-        string error_message = "This demo needs at least 2 images to work. Please add more images to your data set!";
-        CV_Error(Error::StsError, error_message);
-    }
+    imshow("output", src);
 
-    // Reshape and stack images into a rowMatrix
-    Mat data = formatImagesForPCA(images);
-
-    // perform PCA
-    PCA pca(data, cv::Mat(), PCA::DATA_AS_ROW, 0.95); // trackbar is initially set here, also this is a common value for retainedVariance
-
-    // Demonstration of the effect of retainedVariance on the first image
-    Mat point = pca.project(data.row(0)); // project into the eigenspace, thus the image becomes a "point"
-    Mat reconstruction = pca.backProject(point); // re-create the image from the "point"
-    reconstruction = reconstruction.reshape(images[0].channels(), images[0].rows); // reshape from a row vector into image shape
-    reconstruction = toGrayscale(reconstruction); // re-scale for displaying purposes
-
-    // init highgui window
-    string winName = "Reconstruction | press 'q' to quit";
-    namedWindow(winName, WINDOW_NORMAL);
-
-    // params struct to pass to the trackbar handler
-    params p;
-    p.data = data;
-    p.ch = images[0].channels();
-    p.rows = images[0].rows;
-    p.pca = pca;
-    p.winName = winName;
-
-    // create the tracbar
-    int pos = 95;
-    createTrackbar("Retained Variance (%)", winName, &pos, 100, onTrackbar, (void*)&p);
-
-    // display until user presses q
-    imshow(winName, reconstruction);
-
-    int key = 0;
-    while(key != 'q')
-        key = waitKey();
-
-   return 0;
+    waitKey(0);
+    return 0;
 }
