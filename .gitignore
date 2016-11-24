@@ -32,4 +32,7 @@
 *.dSYM/
 *.su
 
+# vim and gedit temp files
 *.swp
+*~
+
