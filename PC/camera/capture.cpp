@@ -1,7 +1,7 @@
 #include "opencv2/opencv.hpp"
 
 using namespace cv;
-int thresh = 160;
+int thresh = 140;
 RNG rng(12345);
 
 int main(int, char**)

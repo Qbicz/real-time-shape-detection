@@ -10,10 +10,12 @@ using namespace std;
 Mat src; Mat src_gray;
 int thresh = 150;
 int max_thresh = 255;
+const float scale = 4e9;
 RNG rng(12345);
 
 /// Function header
 void thresh_callback(int, void* );
+void drawAxis(Mat& img, Point p, Point q, Scalar colour, const float scale);
 
 /** @function main */
 int main( int argc, char** argv )
@@ -56,18 +58,7 @@ void thresh_callback(int, void* )
   for( int i = 0; i < contours.size(); i++ )
      { mu[i] = moments( contours[i], false ); }
 
-  /// Compute Hu moments - use to tell the difference between mirrored objects/rotated 180 degrees
-  for( int i = 0; i < contours.size(); i++)
-  {
-      Moments mom = mu[i];
-      double hu[7];
-      HuMoments(mom, hu);
-      printf("Hu invariants for contour %d:\n", i);
-      for( int i = 0; i < 7; i++ )
-         printf("[%d]=%.4e ", i+1, hu[i]);
-      printf("\n");
-  }
-     
+
   ///  Get the mass centers:
   vector<Point2f> mc( contours.size() );
   for( int i = 0; i < contours.size(); i++ )
@@ -82,6 +73,28 @@ void thresh_callback(int, void* )
        circle( drawing, mc[i], 4, color, -1, 8, 0 );
      }
 
+  /// Compute Hu moments - use to tell the difference between mirrored objects/rotated 180 degrees
+  for( int i = 0; i < contours.size(); i++)
+  {
+      Moments mom = mu[i];
+      double hu[7];
+      HuMoments(mom, hu);
+      printf("Hu invariants for contour %d:\n", i);
+      for( int i = 0; i < 7; i++ )
+         printf("[%d]=%.4e ", i+1, hu[i]);
+      printf("\n");
+
+      /// Show 7th Hu moment as an arrow from the mass center
+      // mass_center = mc[i];
+      Point hu_orient = Point(static_cast<int>(mc[i].x) , static_cast<int>(mc[i].y+scale*(hu[6]))); // 7th Hu moment as a vertical arrow
+      drawAxis(drawing, mc[i], hu_orient, Scalar(255, 255, 0), 5);
+  }
+  /*
+   *  TODO: add PCA and draw orientation: major PCA direction multiplied by 7th Hu moment
+   */
+
+
+
   /// Show in a window
   namedWindow( "Contours", CV_WINDOW_AUTOSIZE );
   imshow( "Contours", drawing );
@@ -95,4 +108,34 @@ void thresh_callback(int, void* )
        drawContours( drawing, contours, i, color, 2, 8, hierarchy, 0, Point() );
        circle( drawing, mc[i], 4, color, -1, 8, 0 );
      }
+}
+
+
+/**
+ * @function drawAxis
+ */
+void drawAxis(Mat& img, Point p, Point q, Scalar colour, const float scale)
+{
+//! [visualization1]
+    double angle;
+    double hypotenuse;
+    angle = atan2( (double) p.y - q.y, (double) p.x - q.x ); // angle in radians
+    hypotenuse = sqrt( (double) (p.y - q.y) * (p.y - q.y) + (p.x - q.x) * (p.x - q.x));
+//    double degrees = angle * 180 / CV_PI; // convert radians to degrees (0-180 range)
+//    cout << "Degrees: " << abs(degrees - 180) << endl; // angle in 0-360 degrees range
+
+    // Here we lengthen the arrow by a factor of scale
+    q.x = (int) (p.x - scale * hypotenuse * cos(angle));
+    q.y = (int) (p.y - scale * hypotenuse * sin(angle));
+    line(img, p, q, colour, 1, CV_AA);
+
+    // create the arrow hooks
+    p.x = (int) (q.x + 9 * cos(angle + CV_PI / 4));
+    p.y = (int) (q.y + 9 * sin(angle + CV_PI / 4));
+    line(img, p, q, colour, 1, CV_AA);
+
+    p.x = (int) (q.x + 9 * cos(angle - CV_PI / 4));
+    p.y = (int) (q.y + 9 * sin(angle - CV_PI / 4));
+    line(img, p, q, colour, 1, CV_AA);
+//! [visualization1]
 }
