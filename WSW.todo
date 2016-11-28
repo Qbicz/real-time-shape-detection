@@ -1,3 +1,32 @@
+#after 24.11
+
+- umowic sie na spotkanie z nim gdzie on nam da probki rzeczywistych orzechow (filmow)
+
+
+
+## CHYBA SOLVED - w repo mamy plliczki potrzebne ktore trzeba zinstalowac
+- libOpenCl.so - nie mozna uzywac tego z mali sdk budowanego tylko trzeba wziac systemow
+niestety nigdzie go nie znajdujemy.. moze trzeba zaintalowac jakos?
+
+a moze sprobowac uzyc tej kompilowanej ale cc istawic na g++?
+na odroidize powinno byc cos jak
+/usr/lib/arm-linux-gnueabihf/libOpenCL.so
+/usr/lib/arm-linux-gnueabihf/libOpenCL.so.1
+/usr/lib/arm-linux-gnueabihf/libOpenCL.so.1.0.0
+/usr/lib/arm-linux-gnueabihf/mali-egl/libOpenCL.so
+/usr/share/doc/ocl-icd-libopencl1/html/libOpenCL.html
+
+http://visionlab.uncc.edu/dokuwiki/install_opencl
+
+
+Tutaj jakies standalony:
+ocl-icd-opencl-dev
+ocl-icd-libopencl1
+ocl-icd-libopencl1
+
+Ewentualnie to co mamy w repo
+
+
 WSW TODO:
 - przygotować obrazy i program OpenCV do sprawdzenia czy momenty Hu nie zmieniają się zależnie od obrotu i wielkości
 - wykonywanie PCA dla ruchomego obrazu z kamery: merge kodu camera i pca
