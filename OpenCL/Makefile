@@ -48,6 +48,9 @@ endif
 endif
 endif
 
+$(info "INC_DIRS:" $(INC_DIRS))
+$(info "LIB_DIRS:" $(LIB_DIRS))
+
 $(PROJ): $(PROJ).c
 	$(CC) $(CFLAGS) -o $@ $^ $(INC_DIRS:%=-I%) $(LIB_DIRS:%=-L%) $(LIBS)
 
