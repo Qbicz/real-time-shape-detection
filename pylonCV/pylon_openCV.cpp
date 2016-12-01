@@ -16,7 +16,7 @@
 #include <opencv2/highgui/highgui.hpp>
 
 // Include files to use the PYLON API.
-#include <pylon/PylonIncludes.h>
+#include "pylon/PylonIncludes.h"
 
 // Use sstream to create image names including integer
 #include <sstream>
