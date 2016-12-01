@@ -1,5 +1,5 @@
 CXX=g++
-CXXFLAGS= -std=c++11 `pkg-config --libs opencv`
+CXXFLAGS= `pkg-config --libs opencv`
 # --cflags
 DEPS = 
 OBJ = capture.o

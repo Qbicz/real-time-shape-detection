@@ -1,4 +1,5 @@
 #include "opencv2/opencv.hpp"
+#include <stdio.h>
 
 using namespace cv;
 int thresh = 140;
@@ -8,7 +9,10 @@ int main(int, char**)
 {
     VideoCapture cap(0); // open the default camera
     if(!cap.isOpened())  // check if we succeeded
-        return -1;
+    {
+	printf("camera 0 not found!\n");
+	return -1;
+    }
     Mat gray;
     namedWindow("edges",1);
     for(;;)

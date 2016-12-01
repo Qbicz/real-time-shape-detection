@@ -1,5 +1,5 @@
 CXX=g++
-CXXFLAGS= -std=c++11 `pkg-config --cflags --libs opencv`
+CXXFLAGS= `pkg-config --cflags --libs opencv`
 DEPS = 
 OBJ = moments.o
 
