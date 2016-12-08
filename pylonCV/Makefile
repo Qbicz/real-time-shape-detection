@@ -1,26 +1,32 @@
-CXX=g++
-CXXFLAGS= -I/opt/pylon5/include/ `pkg-config --cflags --libs opencv`
-DEPS = 
-OBJ = pylon_openCV.o
+# Makefile for Basler pylon sample program
+.PHONY: all clean
 
-all: welcome clean pylon_openCV
-	
-%.o: %.cpp $(DEPS)
-	@echo Compiling $< with $(CXX)...
-	$(CXX) -c -o $@ $< $(CXXFLAGS)
+# The program to build
+NAME       := pylon_openCV
 
-pylon_openCV: $(OBJ)
-	$(CXX) -o $@ $^ $(CXXFLAGS)
+# Installation directories for pylon
+PYLON_ROOT ?= /opt/pylon5
 
-clean:
-	rm -f *.o *~
-	
+# Build tools and flags
+LD         := $(CXX)
+CPPFLAGS   := $(shell $(PYLON_ROOT)/bin/pylon-config --cflags) `pkg-config --cflags --libs opencv`
+CXXFLAGS   := #e.g., CXXFLAGS=-g -O0 for debugging 
+LDFLAGS    := $(shell $(PYLON_ROOT)/bin/pylon-config --libs-rpath) 
+LDLIBS     := $(shell $(PYLON_ROOT)/bin/pylon-config --libs) `pkg-config --cflags --libs opencv`
+
+# Rules for building
+all: $(NAME)
+
+$(NAME): $(NAME).o
+	$(LD) $(LDFLAGS) -o $@ $^ $(LDLIBS)
+
+$(NAME).o: $(NAME).cpp
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
+
 welcome:
 	@echo ---------------------------------------
 	@echo ------ Pylon Camera with OpenCV -------
 	@echo ---------------------------------------
 	
-# (useful when debugging)
-# redirect compilation output to less:
-# less < <(make 2>&1)
-
+clean:
+	$(RM) $(NAME).o $(NAME)
