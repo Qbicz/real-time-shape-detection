@@ -48,17 +48,19 @@ int main(int argc, char* argv[])
     try
     {
         // Create an instant camera object with the camera device found first.
-        CDeviceInfo info;
-	info.SetSerialNumber("21694497");
+        // CDeviceInfo info;
+	// info.SetSerialNumber("21694497");
 	cout << "Creating Camera..." << endl;
-	CInstantCamera camera( CTlFactory::GetInstance().CreateFirstDevice(info));
+	CInstantCamera camera( CTlFactory::GetInstance().CreateFirstDevice());
 	cout << "Camera Created." << endl;
         // Print the model name of the camera.
         cout << "Using device " << camera.GetDeviceInfo().GetModelName() << endl;
 
+	// TODO: ustawic niska rozdzielczosc zdjecia akwizycji
+
         // The parameter MaxNumBuffer can be used to control the count of buffers
         // allocated for grabbing. The default value of this parameter is 10.
-        camera.MaxNumBuffer = 10;
+        camera.MaxNumBuffer = 2;
 
 	// create pylon image format converter and pylon image
 	CImageFormatConverter formatConverter;
@@ -87,10 +89,10 @@ int main(int argc, char* argv[])
             if (ptrGrabResult->GrabSucceeded())
             {
                 // Access the image data.
-                cout << "SizeX: " << ptrGrabResult->GetWidth() << endl;
-                cout << "SizeY: " << ptrGrabResult->GetHeight() << endl;
+                // cout << "SizeX: " << ptrGrabResult->GetWidth() << endl;
+                // cout << "SizeY: " << ptrGrabResult->GetHeight() << endl;
                 const uint8_t *pImageBuffer = (uint8_t *) ptrGrabResult->GetBuffer();
-                cout << "Gray value of first pixel: " << (uint32_t) pImageBuffer[0] << endl << endl;
+                // cout << "Gray value of first pixel: " << (uint32_t) pImageBuffer[0] << endl << endl;
 		
 		// Convert the grabbed buffer to pylon imag
 		formatConverter.Convert(pylonImage, ptrGrabResult);
