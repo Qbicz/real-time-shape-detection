@@ -36,3 +36,10 @@ but with different data
 computing
 - SIMT is also a natural choice for many-core chips to
 simplify each core
+
+
+Links for image processing:
+
+http://malideveloper.arm.com/downloads/deved/tutorial/SDK/opencl/sobel_tutorial.html
+
+https://www.evl.uic.edu/kreda/gpu/image-convolution/

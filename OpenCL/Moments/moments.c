@@ -1,6 +1,5 @@
-#define PROGRAM_FILE "add_numbers.cl"
-#define KERNEL_FUNC "add_numbers"
-#define ARRAY_SIZE 64
+#define PROGRAM_FILE "moments.cl"
+#define KERNEL_FUNC "moments"
 
 #include <math.h>
 #include <stdio.h>
@@ -92,8 +91,9 @@ cl_program build_program(cl_context ctx, cl_device_id dev, const char* filename)
    return program;
 }
 
-int main() {
+#include <time.h>
 
+int main() {
    /* OpenCL structures */
    cl_device_id device;
    cl_context context;
@@ -103,18 +103,36 @@ int main() {
    cl_int i, j, err;
    size_t local_size, global_size;
 
+   //cl_int num_groups;
+   const int IMAGE_WIDTH = 16;
+   const int IMAGE_HEIGHT = 4;
+   const int ARRAY_SIZE = IMAGE_HEIGHT * IMAGE_WIDTH;
+   const int KERNEL_SIZE = 8;                                             //the number of pixels each kernel should process
+   const int NUM_WORK_ITEMS = IMAGE_WIDTH / KERNEL_SIZE;                  //the number of work items in each work group
+   size_t GLOBAL_SIZE = (IMAGE_WIDTH * IMAGE_HEIGHT) / KERNEL_SIZE;    //total number of kernels
+   size_t NUM_WORK_GROUPS = IMAGE_HEIGHT;
+   printf("Following environment will be created:\n\
+           Image size: %dx%d\n\
+           Kernel size: %d\n\
+           Total number of kernels: %d\n\
+           Number of work-groups: %d\n\
+           Number of work-items in each group: %d\n",
+           IMAGE_WIDTH, IMAGE_HEIGHT, KERNEL_SIZE, GLOBAL_SIZE, NUM_WORK_GROUPS, NUM_WORK_ITEMS);
+   
    /* Data and buffers */
    float data[ARRAY_SIZE];
-   float sum[2], total, actual_sum;
+   float sum[NUM_WORK_GROUPS];/// total, actual_sum;
    cl_mem input_buffer, sum_buffer;
-   cl_int num_groups;
 
-    printf("Data vector:\n");
-   /* Initialize data */
-   for(i=0; i<ARRAY_SIZE; i++) {
-      data[i] = 1.0f*i;
-      printf("%f ", data[i]);
-   }
+
+    printf("Data vector:");
+   /* Initialize data with random 0 and 1 */
+    for(i=0; i<ARRAY_SIZE; i++) {
+        if(i % IMAGE_WIDTH == 0)
+            printf("\n");
+        data[i] = i % 5 % 2;
+        printf("%5.2f ", data[i]);
+    }
     printf("\n");
 
    /* Create device and context */
@@ -130,12 +148,10 @@ int main() {
 
    /* Create data buffer */
    global_size = 8;
-   local_size = 4;
-   num_groups = global_size/local_size;
-   input_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY |
-         CL_MEM_COPY_HOST_PTR, ARRAY_SIZE * sizeof(float), data, &err);
-   sum_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE |
-         CL_MEM_COPY_HOST_PTR, num_groups * sizeof(float), sum, &err);
+   //local_size = 4; - used to tell how many work item is in each work group - now unused
+   //num_groups = global_size/local_size; - as above
+   input_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, ARRAY_SIZE * sizeof(float), data, &err);
+   sum_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, NUM_WORK_GROUPS * sizeof(float), sum, &err);
    if(err < 0) {
       perror("Couldn't create a buffer");
       exit(1);   
@@ -157,16 +173,20 @@ int main() {
 
    /* Create kernel arguments */
    err = clSetKernelArg(kernel, 0, sizeof(cl_mem), &input_buffer);
-   err |= clSetKernelArg(kernel, 1, local_size * sizeof(float), NULL);
-   err |= clSetKernelArg(kernel, 2, sizeof(cl_mem), &sum_buffer);
+   err |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &sum_buffer);
+   //err |= clSetKernelArg(kernel, 1, NUM_WORK_GROUPS * sizeof(float), NULL);
    if(err < 0) {
       perror("Couldn't create a kernel argument");
       exit(1);
    }
+    local_size = 8; //determine how many work items will be for each workgroup
+  
+    clock_t begin = clock();
 
+  
    /* Enqueue kernel */
-   err = clEnqueueNDRangeKernel(queue, kernel, 1, NULL, &global_size, 
-         &local_size, 0, NULL, NULL); 
+   err = clEnqueueNDRangeKernel(queue, kernel, 1, NULL, &GLOBAL_SIZE, 
+         &NUM_WORK_GROUPS, 0, NULL, NULL); 
    if(err < 0) {
       perror("Couldn't enqueue the kernel");
       exit(1);
@@ -180,17 +200,28 @@ int main() {
       exit(1);
    }
 
-   /* Check result */
-   total = 0.0f;
-   for(j=0; j<num_groups; j++) {
-      total += sum[j];
-   }
-   actual_sum = 1.0f * ARRAY_SIZE/2*(ARRAY_SIZE-1);
-   printf("Computed sum = %.1f.\n", total);
-   if(fabs(total - actual_sum) > 0.01*fabs(actual_sum))
-      printf("Check failed.\n");
-   else
-      printf("Check passed.\n");
+    for(size_t i = 0; i < NUM_WORK_GROUPS; i++)
+    {
+        printf("Computed sum[%d]: %f\n", i, sum[i]);
+    }
+
+   //~ /* Check result */
+   //~ total = 0.0f;
+   //~ for(j=0; j<num_groups; j++) {
+      //~ total += sum[j];
+   //~ }
+   //~ actual_sum = 1.0f * ARRAY_SIZE/2*(ARRAY_SIZE-1);
+   //~ printf("Computed sum = %.1f.\n", total);
+   //~ if(fabs(total - actual_sum) > 0.01*fabs(actual_sum))
+      //~ printf("Check failed.\n");
+   //~ else
+      //~ printf("Check passed.\n");
+
+    
+    clock_t end = clock();
+    double time_spent = 1000 * ((double)(end - begin) / CLOCKS_PER_SEC);
+    printf("Elapsed time: %f [ms]\n", time_spent);
+
 
    /* Deallocate resources */
    clReleaseKernel(kernel);
@@ -199,5 +230,6 @@ int main() {
    clReleaseCommandQueue(queue);
    clReleaseProgram(program);
    clReleaseContext(context);
+      
    return 0;
 }

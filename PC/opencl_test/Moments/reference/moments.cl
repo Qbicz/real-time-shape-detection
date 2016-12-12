@@ -1,5 +1,7 @@
 /* See LICENSE file in the root OpenCV directory */
 
+#define TILE_SIZE 32
+
 #if TILE_SIZE != 32
 #error "TILE SIZE should be 32"
 #endif
