@@ -1,29 +1,26 @@
-__kernel void moments(__global float8* data, __global float* group_result) {
+__kernel void moments(__global float8* data, __global float* group_result, int NUM_WORK_ITEMS) {
 
-
-   //float4 input1, input2, sum_vector;
-   
-     /*
-     * Each kernel calculates 16 output pixels in the same data_ptr (hence the '* 16').
-     * column is in the range [0, width] in steps of 16.
-     * data_ptr is in the range [0, height].
-     */
-    //const width = 512;
-    //const int column = get_global_id(0) * 16;
-    
-    
-    
-    
     const int KERNEL_SIZE = 8;
-    const int data_ptr = get_local_id(0) * KERNEL_SIZE;
-    const int row = get_local_id(0);
-    float8 sum = 0;
+    const int data_ptr = get_global_id(0);
+    const int row = get_global_id(0) / (NUM_WORK_ITEMS);
+    const int col = get_local_id(0) * KERNEL_SIZE;
+    float sum = 0;
     float8 input_data = data[data_ptr];
+    //~ printf("Row: %d, Col: %d\n",row , col);
+    //~ printf("Executing kernel %d with data_ptr %d which starts with %5.2f\n", get_local_id(0), data_ptr, input_data.s0);
     
+    //compute moment M11
+    sum =   input_data.s0 * (0 + data_ptr + col) + 
+            input_data.s1 * (1 + data_ptr + col) + 
+            input_data.s2 * (2 + data_ptr + col) +
+            input_data.s3 * (3 + data_ptr + col) +
+            input_data.s4 * (4 + data_ptr + col) +
+            input_data.s5 * (5 + data_ptr + col) +
+            input_data.s6 * (6 + data_ptr + col) +
+            input_data.s7 * (7 + data_ptr + col);
+    printf("Row: %d, Computed sum inside: %f\n", row, sum);
     
-    
-    
-    
+    group_result[row] += sum;
     
     //float8 input_data;
     
@@ -34,8 +31,8 @@ __kernel void moments(__global float8* data, __global float* group_result) {
         //~ sum += data[data_ptr+j] * j;
     //~ }
     
-    //~ group_result[get_local_id(0)] = sum;
-    printf("Executing kernel %d with data_ptr %d which starts with %5.2f \n", get_local_id(0), data_ptr, data[data_ptr]);
+    
+    
     /* Offset calculates the position in the linear data for the data_ptr and the column. */
     //const int offset = data_ptr * width + column;
     
