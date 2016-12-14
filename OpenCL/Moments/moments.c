@@ -199,7 +199,7 @@ int main() {
     int moment11 = 0;
     for(int i = 0; i < IMAGE_HEIGHT; i++)
     {
-        moment11 += sum[i];
+        moment11 += (i+1) * sum[i];
     }   
     clock_t end = clock();
     double time_spent = 1000 * ((double)(end - begin) / CLOCKS_PER_SEC);
