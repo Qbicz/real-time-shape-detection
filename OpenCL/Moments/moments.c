@@ -185,6 +185,7 @@ int main() {
          &NUM_WORK_ITEMS, 0, NULL, NULL); 
    if(err < 0) {
       perror("Couldn't enqueue the kernel");
+      printf("Error: %d\n", err);
       exit(1);
    }
 
