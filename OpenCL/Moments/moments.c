@@ -101,7 +101,7 @@ int main() {
    cl_program program;
    cl_kernel kernel;
    cl_command_queue queue;
-   cl_int err, i;
+   cl_int err, i, j;
    
    const int IMAGE_WIDTH  = 16;
    const int IMAGE_HEIGHT = 4;
@@ -113,26 +113,25 @@ int main() {
    printf("Following environment will be created:\n\
            Image size: %dx%d\n\
            Kernel size: %d\n\
-           Total number of kernels: %d\n\
-           Number of work-groups: %d\n\
-           Number of work-items in each group: %d\n",
+           Total number of kernels: %zu\n\
+           Number of work-groups: %zu\n\
+           Number of work-items in each group: %zu\n",
            IMAGE_WIDTH, IMAGE_HEIGHT, KERNEL_SIZE, GLOBAL_SIZE, NUM_WORK_GROUPS, NUM_WORK_ITEMS);
    
    /* Data and buffers */
-   float data[ARRAY_SIZE];
+   float data2d[IMAGE_HEIGHT][IMAGE_WIDTH];
+   for(i = 0; i < IMAGE_HEIGHT; i++)
+   {
+       for(j = 0; j < IMAGE_WIDTH; j++)
+       {
+           data2d[i][j] = (i+j) % 5 % 3 % 2;
+           printf("%5.2f ", data2d[i][j]);
+       }
+       printf("\n");
+   }
+   
    float sum[NUM_WORK_GROUPS];/// total, actual_sum;
    cl_mem input_buffer, sum_buffer;
-
-
-    printf("Data vector:");
-   /* Initialize data with random 0 and 1 */
-    for(i=0; i<ARRAY_SIZE; i++) {
-        if(i % IMAGE_WIDTH == 0)
-            printf("\n");
-        data[i] = i % 5 % 2;
-        printf("%5.2f ", data[i]);
-    }
-    printf("\n");
 
    /* Create device and context */
    device = create_device();
@@ -146,7 +145,7 @@ int main() {
    program = build_program(context, device, PROGRAM_FILE);
 
    /* Create data buffer */
-   input_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, ARRAY_SIZE * sizeof(float), data, &err);
+   input_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, ARRAY_SIZE * sizeof(float), data2d, &err);
    sum_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, NUM_WORK_GROUPS * sizeof(float), sum, &err);
    if(err < 0) {
       perror("Couldn't create a buffer");
@@ -172,6 +171,7 @@ int main() {
    err = clSetKernelArg(kernel, 0, sizeof(cl_mem), &input_buffer);
    err |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &sum_buffer);
    err |= clSetKernelArg(kernel, 2, sizeof(tmp), &tmp);
+   err |= clSetKernelArg(kernel, 3, NUM_WORK_ITEMS * sizeof(float), NULL);
    if(err < 0) {
       perror("Couldn't create a kernel argument");
       exit(1);
@@ -196,15 +196,15 @@ int main() {
       perror("Couldn't read the buffer");
       exit(1);
    }
-    //~ int moment11 = 0;
-    //~ for(int i = 0; i < IMAGE_HEIGHT; i++)
-    //~ {
-        //~ moment11 += sum[i];
-    //~ }   
+    int moment11 = 0;
+    for(int i = 0; i < IMAGE_HEIGHT; i++)
+    {
+        moment11 += sum[i];
+    }   
     clock_t end = clock();
     double time_spent = 1000 * ((double)(end - begin) / CLOCKS_PER_SEC);
     printf("Elapsed time: %f [ms]\n", time_spent);
-    //~ printf("M11 = %d\n", moment11);
+    printf("M11 = %d\n", moment11);
 
    /* Deallocate resources */
    clReleaseKernel(kernel);
