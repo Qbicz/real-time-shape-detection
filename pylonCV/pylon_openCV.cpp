@@ -34,7 +34,7 @@ using namespace cv;
 using namespace std;
 
 // Number of images to be grabbed.
-static const uint32_t c_countOfImagesToGrab = 10000;
+static const uint32_t c_countOfImagesToGrab = 1000;
 
 int main(int argc, char* argv[])
 {
@@ -48,36 +48,27 @@ int main(int argc, char* argv[])
     try
     {
         // Create an instant camera object with the camera device found first.
-	cout << "Creating Camera..." << endl;
-	CInstantCamera camera( CTlFactory::GetInstance().CreateFirstDevice());
-	cout << "Camera Created." << endl;
+        // CDeviceInfo info;
+        // info.SetSerialNumber("21694497");
+        cout << "Creating Camera..." << endl;
+        CInstantCamera camera( CTlFactory::GetInstance().CreateFirstDevice());
+        cout << "Camera Created." << endl;
         // Print the model name of the camera.
         cout << "Using device " << camera.GetDeviceInfo().GetModelName() << endl;
 
-	// Create nodemap of camera params (for video size)
-	GenApi::INodeMap& nodemap = camera.GetNodeMap();
-	GenApi::CIntegerPtr width = nodemap.GetNode("Width");
-	GenApi::CIntegerPtr height = nodemap.GetNode("Height");
-
-	// TODO: ustawic niska rozdzielczosc zdjecia akwizycji - osiagane programem Parametrized
+        // TODO: ustawic niska rozdzielczosc zdjecia akwizycji
 
         // The parameter MaxNumBuffer can be used to control the count of buffers
         // allocated for grabbing. The default value of this parameter is 10.
         camera.MaxNumBuffer = 2;
 
-	// create pylon image format converter and pylon image
-	CImageFormatConverter formatConverter;
-	formatConverter.OutputPixelFormat= PixelType_BGR8packed;
-	CPylonImage pylonImage;
+        // create pylon image format converter and pylon image
+        CImageFormatConverter formatConverter;
+        formatConverter.OutputPixelFormat= PixelType_BGR8packed;
+        CPylonImage pylonImage;
 
-	// Create OpenCV Video creator
-	VideoWriter cvVideoCreator;
-	std::string videoFileName = "openCvVideo.avi";
-	
-	// Create an OpenCV image
-	Mat openCvImage;
-
-	
+        // Create an OpenCV image
+        Mat openCvImage;
 
         // Start the grabbing of c_countOfImagesToGrab images.
         // The camera device is parameterized with a default configuration which
@@ -115,7 +106,7 @@ int main(int argc, char* argv[])
 		// Define a timeout for customer's input in ms.
 		// '0' means indefinite, i.e. the next image will be displayed after closing the window 
 		// '1' means live stream
-		waitKey(10);
+		waitKey(1);
 
             }
             else
