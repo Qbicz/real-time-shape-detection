@@ -1,6 +1,5 @@
 #define PROGRAM_FILE "moments.cl"
 #define KERNEL_FUNC "moments"
-#define VALUE 2
 
 #include <math.h>
 #include <stdio.h>
@@ -103,13 +102,15 @@ int main() {
    cl_command_queue queue;
    cl_int err, i, j;
    
-   const int IMAGE_WIDTH  = 16;
-   const int IMAGE_HEIGHT = 4;
+   //Full HD is 1920 x 1080
+   const int IMAGE_WIDTH  = 1920; 
+   const int IMAGE_HEIGHT = 1080;
    const int ARRAY_SIZE = IMAGE_HEIGHT * IMAGE_WIDTH;
    const int KERNEL_SIZE = 8;                                          //the number of pixels each kernel should process
    size_t NUM_WORK_ITEMS = IMAGE_WIDTH / KERNEL_SIZE;                  //the number of work items in each work group
    size_t GLOBAL_SIZE = (IMAGE_WIDTH * IMAGE_HEIGHT) / KERNEL_SIZE;    //total number of kernels
    size_t NUM_WORK_GROUPS = IMAGE_HEIGHT;
+   size_t NUM_MOMENTS = 3; //narazie buffer zostawmy o wielkosci workgroup, ale w moments.cl bedziemy zapisywac juz tylko sam output
    printf("Following environment will be created:\n\
            Image size: %dx%d\n\
            Kernel size: %d\n\
@@ -130,8 +131,8 @@ int main() {
        printf("\n");
    }
    
-   float sum[NUM_WORK_GROUPS];/// total, actual_sum;
-   cl_mem input_buffer, sum_buffer;
+   float sum[NUM_WORK_GROUPS]; // total, actual_sum;
+   float moments[NUM_MOMENTS]; //moments to be used in host application
 
    /* Create device and context */
    device = create_device();
@@ -145,8 +146,9 @@ int main() {
    program = build_program(context, device, PROGRAM_FILE);
 
    /* Create data buffer */
-   input_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, ARRAY_SIZE * sizeof(float), data2d, &err);
-   sum_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, NUM_WORK_GROUPS * sizeof(float), sum, &err);
+   cl_mem input_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, ARRAY_SIZE * sizeof(float), data2d, &err);
+   cl_mem sum_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, NUM_WORK_GROUPS * sizeof(float), sum, &err);
+   cl_mem moments_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, NUM_MOMENTS * sizeof(float), moments, &err);
    if(err < 0) {
       perror("Couldn't create a buffer");
       exit(1);   
@@ -168,10 +170,11 @@ int main() {
 
     int tmp = NUM_WORK_ITEMS;
    /* Create kernel arguments */
-   err = clSetKernelArg(kernel, 0, sizeof(cl_mem), &input_buffer);
-   err |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &sum_buffer);
-   err |= clSetKernelArg(kernel, 2, sizeof(tmp), &tmp);
-   err |= clSetKernelArg(kernel, 3, NUM_WORK_ITEMS * sizeof(float), NULL);
+   err = clSetKernelArg(kernel, 0, sizeof(cl_mem), &input_buffer);          //input data
+   err |= clSetKernelArg(kernel, 1, sizeof(cl_mem), &sum_buffer);           //buffer for each of the work groups
+   err |= clSetKernelArg(kernel, 2, sizeof(tmp), &tmp);                     //pass number of work items as arg
+   err |= clSetKernelArg(kernel, 3, NUM_WORK_ITEMS * sizeof(float), NULL);  //local memory for summing values inside work group
+   err |= clSetKernelArg(kernel, 4, sizeof(cl_mem), &moments_buffer);       //global memory for summing values inside work group
    if(err < 0) {
       perror("Couldn't create a kernel argument");
       exit(1);
@@ -192,19 +195,23 @@ int main() {
    /* Read the kernel's output */
    err = clEnqueueReadBuffer(queue, sum_buffer, CL_TRUE, 0, 
          sizeof(sum), sum, 0, NULL, NULL);
+   err = clEnqueueReadBuffer(queue, moments_buffer, CL_TRUE, 0, 
+         sizeof(moments), moments, 0, NULL, NULL);
+         
+         
    if(err < 0) {
       perror("Couldn't read the buffer");
       exit(1);
    }
-    int moment11 = 0;
-    for(int i = 0; i < IMAGE_HEIGHT; i++)
-    {
-        moment11 += (i+1) * sum[i];
-    }   
+    
     clock_t end = clock();
     double time_spent = 1000 * ((double)(end - begin) / CLOCKS_PER_SEC);
+    
+    //Results 
     printf("Elapsed time: %f [ms]\n", time_spent);
-    printf("M11 = %d\n", moment11);
+    printf("Computed moment M10 = %f\n", moments[0]);
+    printf("Computed moment M11 = %f\n", moments[1]);
+    
 
    /* Deallocate resources */
    clReleaseKernel(kernel);
