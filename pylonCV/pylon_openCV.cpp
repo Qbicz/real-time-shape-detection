@@ -33,6 +33,10 @@ using namespace cv;
 // Namespace for using cout.
 using namespace std;
 
+// Define if images and videos are to be saved.
+#define saveImages  1
+#define recordVideo 1
+
 // Number of images to be grabbed.
 static const uint32_t c_countOfImagesToGrab = 1000;
 
@@ -119,6 +123,22 @@ int main(int argc, char* argv[])
                 formatConverter.Convert(pylonImage, ptrGrabResult);
                 // Create an OpenCV image out of pylon image
                 openCvImage= cv::Mat(ptrGrabResult->GetHeight(), ptrGrabResult->GetWidth(), CV_8UC3, (uint8_t *) pylonImage.GetBuffer());
+
+                // set saveImages to '1' to save images.
+                if (saveImages)
+                {
+                    // current image name for saving
+                    std::ostringstream s;
+                    // create image name files with ascending grabbed image numbers.
+                    s << "image_" << grabbedImages << ".jpg";
+                    std::string imageName(s.str());
+                    // Save an OpenCV image.
+                    imwrite(imageName, openCvImage);
+                    grabbedImages++;
+                }
+                
+                if(recordVideo)
+                    cvVideoCreator.write(openCvImage);
                 
                 // Create a display window
                 namedWindow( "OpenCV Display Window", CV_WINDOW_NORMAL);//AUTOSIZE //FREERATIO
