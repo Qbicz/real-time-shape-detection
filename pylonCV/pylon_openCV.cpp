@@ -56,28 +56,49 @@ int main(int argc, char* argv[])
         // Print the model name of the camera.
         cout << "Using device " << camera.GetDeviceInfo().GetModelName() << endl;
 
+        
         // TODO: ustawic niska rozdzielczosc zdjecia akwizycji
 
         // The parameter MaxNumBuffer can be used to control the count of buffers
         // allocated for grabbing. The default value of this parameter is 10.
-        camera.MaxNumBuffer = 2;
+        camera.MaxNumBuffer = 20;
 
         // create pylon image format converter and pylon image
         CImageFormatConverter formatConverter;
         formatConverter.OutputPixelFormat= PixelType_BGR8packed;
         CPylonImage pylonImage;
 
+        // Get camera nodemap to access parameters
+        INodeMap& nodemap = camera.GetNodeMap();
+        
+        // Create pointers to access the camera Width and Height
+        CIntegerPtr width = nodemap.GetNode("Width");
+        CIntegerPtr height = nodemap.GetNode("Height");
+        
+        // Create an OpenCV video creator
+        VideoWriter cvVideoCreator;
         // Create an OpenCV image
         Mat openCvImage;
-
+        
+        // define video name
+        string videoFileName = "OpenCvVideo.avi";
+        
+        // define the video frame size.
+        cv::Size frameSize = Size((int)width->GetValue(), (int)(height->GetValue()));
+        cout << "Video frame size: " << (int)width->GetValue() << ", " << (int)(height->GetValue() << endl;
+        
+        // set the codec and frame rate
+        cvVideoCreator.open(videoFileName, CV_FOURCC('D', 'I', 'V', 'X'), 60, frameSize, true);
+        
         // Start the grabbing of c_countOfImagesToGrab images.
         // The camera device is parameterized with a default configuration which
         // sets up free-running continuous acquisition.
-        camera.StartGrabbing( c_countOfImagesToGrab);
+        camera.StartGrabbing( c_countOfImagesToGrab, GrabStrategy_LatestImageOnly);
 
         // This smart pointer will receive the grab result data.
         CGrabResultPtr ptrGrabResult;
 
+        
         // Camera.StopGrabbing() is called automatically by the RetrieveResult() method
         // when c_countOfImagesToGrab images have been retrieved.
         while ( camera.IsGrabbing())
@@ -94,19 +115,19 @@ int main(int argc, char* argv[])
                 const uint8_t *pImageBuffer = (uint8_t *) ptrGrabResult->GetBuffer();
                 // cout << "Gray value of first pixel: " << (uint32_t) pImageBuffer[0] << endl << endl;
 		
-		// Convert the grabbed buffer to pylon imag
-		formatConverter.Convert(pylonImage, ptrGrabResult);
-		// Create an OpenCV image out of pylon image
-		openCvImage= cv::Mat(ptrGrabResult->GetHeight(), ptrGrabResult->GetWidth(), CV_8UC3, (uint8_t *) pylonImage.GetBuffer());
-
-		// Create a display window
-		namedWindow( "OpenCV Display Window", CV_WINDOW_NORMAL);//AUTOSIZE //FREERATIO
-		// Display the current image with opencv
-		imshow( "OpenCV Display Window", openCvImage);
-		// Define a timeout for customer's input in ms.
-		// '0' means indefinite, i.e. the next image will be displayed after closing the window 
-		// '1' means live stream
-		waitKey(1);
+                // Convert the grabbed buffer to pylon imag
+                formatConverter.Convert(pylonImage, ptrGrabResult);
+                // Create an OpenCV image out of pylon image
+                openCvImage= cv::Mat(ptrGrabResult->GetHeight(), ptrGrabResult->GetWidth(), CV_8UC3, (uint8_t *) pylonImage.GetBuffer());
+                
+                // Create a display window
+                namedWindow( "OpenCV Display Window", CV_WINDOW_NORMAL);//AUTOSIZE //FREERATIO
+                // Display the current image with opencv
+                imshow( "OpenCV Display Window", openCvImage);
+                // Define a timeout for customer's input in ms.
+                // '0' means indefinite, i.e. the next image will be displayed after closing the window 
+                // '1' means live stream
+                waitKey(1);
 
             }
             else
