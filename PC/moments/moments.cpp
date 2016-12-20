@@ -51,7 +51,22 @@ void thresh_callback(int, void* )
   /// Detect edges using canny
   Canny( src_gray, canny_output, thresh, thresh*2, 3 );
   /// Find contours
-  findContours( canny_output, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0) );
+  findContours( canny_output, contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE, Point(0, 0) );
+
+
+	/// Leave only contours with appropriate length
+	const int contour_thresh = 200;
+	const bool closed = false;
+	vector<vector<Point> > filteredContours;
+	for( int i = 0; i < contours.size(); i++ )
+	{
+		  if(arcLength(contours[i], closed) > contour_thresh)
+		  {
+		      filteredContours.push_back(contours[i]);
+		  }
+  }
+  contours.assign(filteredContours.begin(), filteredContours.end());
+
 
   /// Get the moments
   vector<Moments> mu(contours.size() );
