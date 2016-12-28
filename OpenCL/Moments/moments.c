@@ -92,6 +92,7 @@ cl_program build_program(cl_context ctx, cl_device_id dev, const char* filename)
 }
 
 #include <time.h>
+#include <math.h>
 
 int main() {
    /* OpenCL structures */
@@ -256,7 +257,17 @@ int main() {
     printf("Moment M21 = %4.2f / %4.2f\n", m21,moments[5]);
     printf("Moment M30 = %4.2f / %4.2f\n", m30,moments[6]);
 
+    printf("Computing normalized central moments...\n");
+    float n21 = m21 / powf(m00, 2.5),
+          n03 = m03 / powf(m00, 2.5),
+          n30 = m30 / powf(m00, 2.5),
+          n12 = m12 / powf(m00, 2.5);
 
+
+    printf("Computing Hu moments...\n");
+    float Hu7 = (3*n21-n03)*(n30+n12)*( (n30+n12) * (n30+n12) - 3 * (n21+n03)*(n21+n03) ) - 
+                 (n30-3*n12) * (n12+n03) * ( 3*(n30+n12)*(n30+n12) -(n21+n03)*(n21+n03) );
+    printf("Hu7 = %f\n", Hu7);
 
 
    /* Deallocate resources */

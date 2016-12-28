@@ -1,7 +1,7 @@
 PROJ=moments
 
 CC=gcc
-CFLAGS=-std=c99 -Wall -DUNIX -g -DDEBUG
+CFLAGS=-std=c99 -Wall -DUNIX -g -DDEBUG 
 
 # Check for 32-bit vs 64-bit
 PROC_TYPE = $(strip $(shell uname -m | grep 64))
@@ -23,7 +23,7 @@ ifneq ($(DARWIN),)
 else
 
 # Linux OS
-LIBS=-lOpenCL
+LIBS=-lOpenCL -lm
 ifeq ($(PROC_TYPE),)
 	CFLAGS+=-m32
 else
