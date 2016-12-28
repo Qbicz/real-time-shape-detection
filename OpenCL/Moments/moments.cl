@@ -46,23 +46,20 @@ __kernel void moments(__global float8* data,
       //atomic decrement number of workgroups left
       atomic_dec(workgroups_left);
       
-      printf("Number of workgroups left: %d\n", *workgroups_left);
-      printf("Row: %d, Computed sum inside: %f\n", row, group_result[row]);
-   }
-
-    //~ barrier(CLK_LOCAL_MEM_FENCE);
-    //~ barrier(CLK_GLOBAL_MEM_FENCE); //is it neccessary?
-
-   if(*workgroups_left == 0 && get_local_id(0) == 0) //tutaj zamienic na sprawdzenie czy wszystkie workgroupy zakonczyly dzialalnosc
-   {
-    printf("Executing from row: %d\n", row);
-      float moment11 = 0.0, moment10 = 0.0;
-      for(int i=0; i<4; i++) //change it to number of rows
+      if(0 == *workgroups_left)
       {
-         moment10 += group_result[i]; 
-         moment11 += (i+1) * group_result[i];
+          printf("Executing from row: %d\n", row);
+          float moment11 = 0.0, moment10 = 0.0;
+          for(int i=0; i<4; i++) //change it to number of rows
+          {
+             moment10 += group_result[i]; 
+             moment11 += (i+1) * group_result[i];
+          }
+          moments[0] = moment10;
+          moments[1] = moment11;
       }
-      moments[0] = moment10;
-      moments[1] = moment11;
+      
+      //~ printf("Number of workgroups left: %d\n", *workgroups_left);
+      //~ printf("Row: %d, Computed sum inside: %f\n", row, group_result[row]);
    }
 }
