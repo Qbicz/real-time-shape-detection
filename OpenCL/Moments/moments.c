@@ -104,7 +104,7 @@ int main() {
    
    //Full HD is 1920 x 1080
    const int IMAGE_WIDTH  = 16; 
-   const int IMAGE_HEIGHT = 4;
+   const int IMAGE_HEIGHT = 2;
    const int ARRAY_SIZE = IMAGE_HEIGHT * IMAGE_WIDTH;
    const int KERNEL_SIZE = 8;                                          //the number of pixels each kernel should process
    size_t NUM_WORK_ITEMS = IMAGE_WIDTH / KERNEL_SIZE;                  //the number of work items in each work group
@@ -144,7 +144,7 @@ int main() {
 
    
    float sum[NUM_MOMENTS * NUM_WORK_GROUPS];
-   float moments[NUM_CENTRAL_MOMENTS]; //moments to be used in host application
+   double moments[NUM_CENTRAL_MOMENTS]; //moments to be used in host application
    int workgroups_left = NUM_WORK_GROUPS; //decrement counter
 
    /* Create device and context */
@@ -161,7 +161,7 @@ int main() {
    /* Create data buffer */
    cl_mem input_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, ARRAY_SIZE * sizeof(float), data2d, &err);
    cl_mem sum_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, NUM_MOMENTS * NUM_WORK_GROUPS * sizeof(float), sum, &err);
-   cl_mem moments_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, NUM_CENTRAL_MOMENTS * sizeof(float), moments, &err);
+   cl_mem moments_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, NUM_CENTRAL_MOMENTS * sizeof(double), moments, &err);
    cl_mem workgroups_left_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(int), &workgroups_left, &err);
    
    if(err < 0) {
@@ -231,7 +231,7 @@ int main() {
     //Check the answers
     
     printf("Validiating the answers...\n");
-   float m11 = 0, m30 =0, m03 =0, m12 = 0, m21 = 0, m20 =0, m02 =0;
+   double m11 = 0, m30 =0, m03 =0, m12 = 0, m21 = 0, m20 =0, m02 =0;
    for(int i = 0; i < IMAGE_HEIGHT; i++)
    {
        for(int j = 0; j < IMAGE_WIDTH; j++)

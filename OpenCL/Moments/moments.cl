@@ -2,7 +2,7 @@ __kernel void moments(__global float8* data,
                       __global float* group_result, 
                       int NUM_WORK_ITEMS, 
                       __local float* local_result, 
-                      __global float* central_moments,
+                      __global double* central_moments,
                       __global int* workgroups_left,
                       float x_,
                       float y_) {
