@@ -103,15 +103,15 @@ int main() {
    cl_int err, i, j;
    
    //Full HD is 1920 x 1080
-   const int IMAGE_WIDTH  = 1920; 
-   const int IMAGE_HEIGHT = 1080;
+   const int IMAGE_WIDTH  = 16; 
+   const int IMAGE_HEIGHT = 4;
    const int ARRAY_SIZE = IMAGE_HEIGHT * IMAGE_WIDTH;
    const int KERNEL_SIZE = 8;                                          //the number of pixels each kernel should process
    size_t NUM_WORK_ITEMS = IMAGE_WIDTH / KERNEL_SIZE;                  //the number of work items in each work group
    size_t GLOBAL_SIZE = (IMAGE_WIDTH * IMAGE_HEIGHT) / KERNEL_SIZE;    //total number of kernels
    size_t NUM_WORK_GROUPS = IMAGE_HEIGHT;
    size_t NUM_MOMENTS = 3; //narazie buffer zostawmy o wielkosci workgroup, ale w moments.cl bedziemy zapisywac juz tylko sam output
-   printf("Following environment will be created:\n\
+   printf("The following environment will be created:\n\
            Image size: %dx%d\n\
            Kernel size: %d\n\
            Total number of kernels: %zu\n\
@@ -133,6 +133,7 @@ int main() {
    
    float sum[NUM_WORK_GROUPS]; // total, actual_sum;
    float moments[NUM_MOMENTS]; //moments to be used in host application
+   int workgroups_left = NUM_WORK_GROUPS; //decrement counter
 
    /* Create device and context */
    device = create_device();
@@ -149,6 +150,8 @@ int main() {
    cl_mem input_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, ARRAY_SIZE * sizeof(float), data2d, &err);
    cl_mem sum_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, NUM_WORK_GROUPS * sizeof(float), sum, &err);
    cl_mem moments_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, NUM_MOMENTS * sizeof(float), moments, &err);
+   cl_mem workgroups_left_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(int), &workgroups_left, &err);
+   
    if(err < 0) {
       perror("Couldn't create a buffer");
       exit(1);   
@@ -175,13 +178,14 @@ int main() {
    err |= clSetKernelArg(kernel, 2, sizeof(tmp), &tmp);                     //pass number of work items as arg
    err |= clSetKernelArg(kernel, 3, NUM_WORK_ITEMS * sizeof(float), NULL);  //local memory for summing values inside work group
    err |= clSetKernelArg(kernel, 4, sizeof(cl_mem), &moments_buffer);       //global memory for summing values inside work group
+   err |= clSetKernelArg(kernel, 5, sizeof(cl_mem), &workgroups_left_buffer);      
+   
    if(err < 0) {
       perror("Couldn't create a kernel argument");
       exit(1);
    }
 
     clock_t begin = clock();
-
   
    /* Enqueue kernel */
    err = clEnqueueNDRangeKernel(queue, kernel, 1, NULL, &GLOBAL_SIZE, 
@@ -193,8 +197,8 @@ int main() {
    }
 
    /* Read the kernel's output */
-   err = clEnqueueReadBuffer(queue, sum_buffer, CL_TRUE, 0, 
-         sizeof(sum), sum, 0, NULL, NULL);
+   //~ err = clEnqueueReadBuffer(queue, sum_buffer, CL_TRUE, 0, 
+         //~ sizeof(sum), sum, 0, NULL, NULL);
    err = clEnqueueReadBuffer(queue, moments_buffer, CL_TRUE, 0, 
          sizeof(moments), moments, 0, NULL, NULL);
          
@@ -217,6 +221,7 @@ int main() {
    clReleaseKernel(kernel);
    clReleaseMemObject(sum_buffer);
    clReleaseMemObject(input_buffer);
+   clReleaseMemObject(workgroups_left_buffer);
    clReleaseCommandQueue(queue);
    clReleaseProgram(program);
    clReleaseContext(context);
