@@ -103,8 +103,8 @@ int main() {
    cl_int err, i, j;
    
    //Full HD is 1920 x 1080
-   const int IMAGE_WIDTH  = 8; 
-   const int IMAGE_HEIGHT = 2;
+   const int IMAGE_WIDTH  = 16; 
+   const int IMAGE_HEIGHT = 4;
    const int ARRAY_SIZE = IMAGE_HEIGHT * IMAGE_WIDTH;
    const int KERNEL_SIZE = 8;                                          //the number of pixels each kernel should process
    size_t NUM_WORK_ITEMS = IMAGE_WIDTH / KERNEL_SIZE;                  //the number of work items in each work group
@@ -130,9 +130,7 @@ int main() {
    {
        for(j = 0; j < IMAGE_WIDTH; j++)
        {
-           data2d[i][j] = 0;//(i+j) % 5 % 3 % 2;
-           data2d[0][0] = 1;
-           data2d[1][1] = 1;
+           data2d[i][j] = (i+j) % 5 % 3 % 2;
            printf("%5.2f ", data2d[i][j]);
            m00 += data2d[i][j];
            m01 += (j+1) * data2d[i][j];

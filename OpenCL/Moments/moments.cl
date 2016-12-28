@@ -23,7 +23,7 @@ __kernel void moments(__global float8* data,
                input_data.s5 +
                input_data.s6 +
                input_data.s7;       
-    //~ printf("Moment mx0 = %f\n", momentX0);
+
     //compute central moment MX1 in a row
     float momentX1 = input_data.s0 * (1 + initial_col - y_) + 
                input_data.s1 * (2 + initial_col - y_) + 
@@ -53,6 +53,7 @@ __kernel void moments(__global float8* data,
                input_data.s5 * (6 + initial_col - y_) * (6 + initial_col - y_)  * (6 + initial_col - y_) +
                input_data.s6 * (7 + initial_col - y_) * (7 + initial_col - y_)  * (7 + initial_col - y_) +
                input_data.s7 * (8 + initial_col - y_) * (8 + initial_col - y_)  * (8 + initial_col - y_);
+       //~ printf("Moment mx2 = %f will be saved to %d\n", momentX2, get_local_id(0) + get_local_size(0) * 2);           
                
    local_result[get_local_id(0) + get_local_size(0) * 0] = momentX0;
    local_result[get_local_id(0) + get_local_size(0) * 1] = momentX1;
@@ -75,7 +76,7 @@ __kernel void moments(__global float8* data,
          local_MX2 += local_result[i + get_local_size(0) * 2];
          local_MX3 += local_result[i + get_local_size(0) * 3];
       }
-      //~ printf("Moment mx0 from all work items inside group = %f\n", local_MX0);
+      //~ printf("Moment mx2 from all work items inside group = %f will be saved to %d\n", local_MX2, 2 + 4*row);
       group_result[0 + 4*row] = local_MX0;//4 values for each row
       group_result[1 + 4*row] = local_MX1;
       group_result[2 + 4*row] = local_MX2;
@@ -87,6 +88,7 @@ __kernel void moments(__global float8* data,
       if(0 == *workgroups_left)
       {
           const int number_of_workgroups = get_global_size(0)/get_local_size(0);
+          const int COMPUTED_MOMENTS = 4;
           float moment11 = 0.0, moment12 = 0.0, moment30 = 0, moment03 = 0, moment02 = 0,moment20 = 0, moment21 = 0;
           
           //~ printf("Workgroup id:%d. Computing moments hence all local computations finished.\n", row);
@@ -97,13 +99,15 @@ __kernel void moments(__global float8* data,
            */
           for(int i=0; i < number_of_workgroups; i++) //change it to number of rows
           {
-             moment02 += group_result[2 + i*number_of_workgroups];
-             moment03 += group_result[3 + i*number_of_workgroups];
-             moment11 += (i+1 - x_) * group_result[1 + i*number_of_workgroups];
-             moment12 += (i+1 - x_) * group_result[2 + i*number_of_workgroups];
-             moment21 += (i+1 - x_) *(i+1 - x_) * group_result[1 + i*number_of_workgroups];
-             moment20 += (i+1 - x_) *(i+1 - x_) * group_result[0 + i*number_of_workgroups];
-             moment30 += (i+1 - x_) *(i+1 - x_) * (i+1 - x_) * group_result[0 + i*number_of_workgroups];
+              //~ printf("Index: %d\n", 2 + i*COMPUTED_MOMENTS);
+              //~ printf("Adding to m02 %f\n", group_result[2 + i*COMPUTED_MOMENTS]);
+             moment02 += group_result[2 + i*COMPUTED_MOMENTS];
+             moment03 += group_result[3 + i*COMPUTED_MOMENTS];
+             moment11 += (i+1 - x_) * group_result[1 + i*COMPUTED_MOMENTS];
+             moment12 += (i+1 - x_) * group_result[2 + i*COMPUTED_MOMENTS];
+             moment21 += (i+1 - x_) *(i+1 - x_) * group_result[1 + i*COMPUTED_MOMENTS];
+             moment20 += (i+1 - x_) *(i+1 - x_) * group_result[0 + i*COMPUTED_MOMENTS];
+             moment30 += (i+1 - x_) *(i+1 - x_) * (i+1 - x_) * group_result[0 + i*COMPUTED_MOMENTS];
           }
           
           central_moments[0] = moment02;
