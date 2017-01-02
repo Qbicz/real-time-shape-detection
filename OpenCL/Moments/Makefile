@@ -1,6 +1,6 @@
 PROJ=moments
 
-CC=gcc
+CC=g++
 CFLAGS=-std=c99 -Wall -DUNIX -g -DDEBUG 
 
 # Check for 32-bit vs 64-bit

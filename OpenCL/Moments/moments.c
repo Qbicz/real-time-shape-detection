@@ -94,7 +94,8 @@ cl_program build_program(cl_context ctx, cl_device_id dev, const char* filename)
 #include <time.h>
 #include <math.h>
 
-int main() {
+double* computeMomentsWithOpenCL()
+{
    /* OpenCL structures */
    cl_device_id device;
    cl_context context;
@@ -111,8 +112,8 @@ int main() {
    size_t NUM_WORK_ITEMS = IMAGE_WIDTH / KERNEL_SIZE;                  //the number of work items in each work group
    size_t GLOBAL_SIZE = (IMAGE_WIDTH * IMAGE_HEIGHT) / KERNEL_SIZE;    //total number of kernels
    size_t NUM_WORK_GROUPS = IMAGE_HEIGHT;
-   size_t NUM_MOMENTS = 4; //temporary buffer for MX0, MX1, MX2, MX3
-   size_t NUM_CENTRAL_MOMENTS = 7; //m11, m12, m20, m02, m30, m03 is enough for computing HU moments
+   const size_t NUM_MOMENTS = 4; //temporary buffer for MX0, MX1, MX2, MX3
+   const size_t NUM_CENTRAL_MOMENTS = 7; //m11, m12, m20, m02, m30, m03 is enough for computing HU moments
    printf("The following environment will be created:\n\
            Image size: %dx%d\n\
            Kernel size: %d\n\
@@ -131,7 +132,7 @@ int main() {
    {
        for(j = 0; j < IMAGE_WIDTH; j++)
        {
-           data2d[i][j] = (i+j) % 5 % 3 % 2;
+           data2d[i][j] = 255 *  ((i+j) % 5 % 3 % 2) ;
            printf("%5.2f ", data2d[i][j]);
            m00 += data2d[i][j];
            m01 += (j+1) * data2d[i][j];
@@ -141,11 +142,15 @@ int main() {
    }
    x_ = m10 / m00;
    y_ = m01 / m00;
+   printf("M00 = %8.2f, M01 = %8.2f, M10 = %8.2f\n", m00, m01, m10);
    printf("Center of mass: [%f, %f]\n", x_, y_);
 
    
    float sum[NUM_MOMENTS * NUM_WORK_GROUPS];
-   double moments[NUM_CENTRAL_MOMENTS]; //moments to be used in host application
+   
+   double* moments = new double[NUM_CENTRAL_MOMENTS]; 
+   //moments to be used in host application
+   
    int workgroups_left = NUM_WORK_GROUPS; //decrement counter
 
    /* Create device and context */
@@ -162,7 +167,7 @@ int main() {
    /* Create data buffer */
    cl_mem input_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, ARRAY_SIZE * sizeof(float), data2d, &err);
    cl_mem sum_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, NUM_MOMENTS * NUM_WORK_GROUPS * sizeof(float), sum, &err);
-   cl_mem moments_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, NUM_CENTRAL_MOMENTS * sizeof(double), moments, &err);
+   cl_mem moments_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, NUM_CENTRAL_MOMENTS * sizeof(double), &moments[0], &err);
    cl_mem workgroups_left_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(int), &workgroups_left, &err);
    
    if(err < 0) {
@@ -214,9 +219,8 @@ int main() {
    /* Read the kernel's output */
    //~ err = clEnqueueReadBuffer(queue, sum_buffer, CL_TRUE, 0, 
          //~ sizeof(sum), sum, 0, NULL, NULL);
-   err = clEnqueueReadBuffer(queue, moments_buffer, CL_TRUE, 0, 
-         sizeof(moments), moments, 0, NULL, NULL);
-         
+   err = clEnqueueReadBuffer(queue, moments_buffer, CL_TRUE, 0, NUM_CENTRAL_MOMENTS*sizeof(double), moments, 0, NULL, NULL);
+   printf("SIZEOF MOMENTS %d\n", sizeof(moments));       
          
    if(err < 0) {
       perror("Couldn't read the buffer");
@@ -232,6 +236,7 @@ int main() {
     //Check the answers
     
     printf("Validiating the answers...\n");
+    printf("[Moment]\t[Pure C]\t[OpenCL] \n");
    double m11 = 0, m30 =0, m03 =0, m12 = 0, m21 = 0, m20 =0, m02 =0;
    for(int i = 0; i < IMAGE_HEIGHT; i++)
    {
@@ -249,19 +254,25 @@ int main() {
            m30 += cx*cx*cx*data2d[i][j];           
        }
    }    
-    printf("Moment M02 = %4.2f / %4.2f\n", m02,moments[0]);
-    printf("Moment M03 = %4.2f / %4.2f\n", m03,moments[1]);
-    printf("Moment M11 = %4.2f / %4.2f\n", m11,moments[2]);
-    printf("Moment M12 = %4.2f / %4.2f\n", m12,moments[3]);
-    printf("Moment M20 = %4.2f / %4.2f\n", m20,moments[4]);
-    printf("Moment M21 = %4.2f / %4.2f\n", m21,moments[5]);
-    printf("Moment M30 = %4.2f / %4.2f\n", m30,moments[6]);
+    printf("Moment M02\t%8.2f\t%8.2f\n", m02,moments[0]);
+    printf("Moment M03\t%8.2f\t%8.2f\n", m03,moments[1]);
+    printf("Moment M11\t%8.2f\t%8.2f\n", m11,moments[2]);
+    printf("Moment M12\t%8.2f\t%8.2f\n", m12,moments[3]);
+    printf("Moment M20\t%8.2f\t%8.2f\n", m20,moments[4]);
+    printf("Moment M21\t%8.2f\t%8.2f\n", m21,moments[5]);
+    printf("Moment M30\t%8.2f\t%8.2f\n", m30,moments[6]);
 
     printf("Computing normalized central moments...\n");
-    float n21 = m21 / powf(m00, 2.5),
-          n03 = m03 / powf(m00, 2.5),
-          n30 = m30 / powf(m00, 2.5),
-          n12 = m12 / powf(m00, 2.5);
+    printf("Check usage of powf %f\n", powf(m00, 2.5));
+    double n21 = m21 / powf(m00, 2.5),
+           n03 = m03 / powf(m00, 2.5),
+           n30 = m30 / powf(m00, 2.5),
+           n12 = m12 / powf(m00, 2.5);
+    
+    printf("Normalized central moment n21 = %f\n", n21);
+    printf("Normalized central moment n03 = %f\n", n03);
+    printf("Normalized central moment n30 = %f\n", n30);
+    printf("Normalized central moment n12 = %f\n", n12);
 
 
     printf("Computing Hu moments...\n");
@@ -279,5 +290,11 @@ int main() {
    clReleaseProgram(program);
    clReleaseContext(context);
       
-   return 0;
+   return moments; 
+}
+
+
+int main()
+{
+    computeMomentsWithOpenCL();
 }
