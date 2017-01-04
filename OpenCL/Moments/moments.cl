@@ -53,7 +53,7 @@ __kernel void moments(__global float8* data,
                input_data.s5 * (6 + initial_col - y_) * (6 + initial_col - y_)  * (6 + initial_col - y_) +
                input_data.s6 * (7 + initial_col - y_) * (7 + initial_col - y_)  * (7 + initial_col - y_) +
                input_data.s7 * (8 + initial_col - y_) * (8 + initial_col - y_)  * (8 + initial_col - y_);
-       //~ printf("Moment mx2 = %f will be saved to %d\n", momentX2, get_local_id(0) + get_local_size(0) * 2);           
+       printf("Moment mx2 = %f will be saved to %d\n", momentX2, get_local_id(0) + get_local_size(0) * 2);           
                
    local_result[get_local_id(0) + get_local_size(0) * 0] = momentX0;
    local_result[get_local_id(0) + get_local_size(0) * 1] = momentX1;
@@ -119,7 +119,7 @@ __kernel void moments(__global float8* data,
           central_moments[6] = moment30;
       }
       
-      //~ printf("Number of workgroups left: %d\n", *workgroups_left);
-      //~ printf("Row: %d, Computed sum inside: %f\n", row, group_result[row]);
+      printf("Number of workgroups left: %d\n", *workgroups_left);
+      printf("Row: %d, Computed sum inside: %f\n", row, group_result[row]);
    }
 }

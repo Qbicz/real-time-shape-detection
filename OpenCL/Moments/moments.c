@@ -94,7 +94,7 @@ cl_program build_program(cl_context ctx, cl_device_id dev, const char* filename)
 #include <time.h>
 #include <math.h>
 
-double* computeMomentsWithOpenCL()
+double* computeMomentsWithOpenCL(float** a, const int IMAGE_WIDTH,  const int IMAGE_HEIGHT, double* moments, const int NUM_CENTRAL_MOMENTS)
 {
    /* OpenCL structures */
    cl_device_id device;
@@ -105,15 +105,14 @@ double* computeMomentsWithOpenCL()
    cl_int err, i, j;
    
    //Full HD is 1920 x 1080
-   const int IMAGE_WIDTH  = 16; 
-   const int IMAGE_HEIGHT = 2;
+   //~ const int IMAGE_WIDTH  = 16; 
+   //~ const int IMAGE_HEIGHT = 2;
    const int ARRAY_SIZE = IMAGE_HEIGHT * IMAGE_WIDTH;
    const int KERNEL_SIZE = 8;                                          //the number of pixels each kernel should process
    size_t NUM_WORK_ITEMS = IMAGE_WIDTH / KERNEL_SIZE;                  //the number of work items in each work group
    size_t GLOBAL_SIZE = (IMAGE_WIDTH * IMAGE_HEIGHT) / KERNEL_SIZE;    //total number of kernels
    size_t NUM_WORK_GROUPS = IMAGE_HEIGHT;
    const size_t NUM_MOMENTS = 4; //temporary buffer for MX0, MX1, MX2, MX3
-   const size_t NUM_CENTRAL_MOMENTS = 7; //m11, m12, m20, m02, m30, m03 is enough for computing HU moments
    printf("The following environment will be created:\n\
            Image size: %dx%d\n\
            Kernel size: %d\n\
@@ -125,9 +124,11 @@ double* computeMomentsWithOpenCL()
    /* Data and buffers */
    //calculate center of mass as x_ and y_
    
-   float data2d[IMAGE_HEIGHT][IMAGE_WIDTH];
+
    float x_, y_, m00 = 0, m10 = 0, m01 = 0;
-      
+   
+   float data2d[IMAGE_HEIGHT][IMAGE_WIDTH];
+    
    for(i = 0; i < IMAGE_HEIGHT; i++)
    {
        for(j = 0; j < IMAGE_WIDTH; j++)
@@ -148,7 +149,7 @@ double* computeMomentsWithOpenCL()
    
    float sum[NUM_MOMENTS * NUM_WORK_GROUPS];
    
-   double* moments = new double[NUM_CENTRAL_MOMENTS]; 
+   //~ double* moments = new double[NUM_CENTRAL_MOMENTS]; 
    //moments to be used in host application
    
    int workgroups_left = NUM_WORK_GROUPS; //decrement counter
@@ -167,7 +168,7 @@ double* computeMomentsWithOpenCL()
    /* Create data buffer */
    cl_mem input_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, ARRAY_SIZE * sizeof(float), data2d, &err);
    cl_mem sum_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, NUM_MOMENTS * NUM_WORK_GROUPS * sizeof(float), sum, &err);
-   cl_mem moments_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, NUM_CENTRAL_MOMENTS * sizeof(double), &moments[0], &err);
+   cl_mem moments_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, NUM_CENTRAL_MOMENTS * sizeof(double), moments, &err);
    cl_mem workgroups_left_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(int), &workgroups_left, &err);
    
    if(err < 0) {
@@ -290,11 +291,33 @@ double* computeMomentsWithOpenCL()
    clReleaseProgram(program);
    clReleaseContext(context);
       
-   return moments; 
+   return 0; 
 }
 
 
 int main()
 {
-    computeMomentsWithOpenCL();
+    const int IMAGE_WIDTH  = 16; 
+    const int IMAGE_HEIGHT = 2;
+    float** image = new float*[IMAGE_WIDTH];
+    
+    for(int i = 0; i < IMAGE_WIDTH; i++)
+    {
+        image[i] = new float[IMAGE_HEIGHT];
+    }
+    
+       //~ float data2d[IMAGE_HEIGHT][IMAGE_WIDTH]; 
+   for(int i = 0; i < IMAGE_HEIGHT; i++)
+   {
+       for(int j = 0; j < IMAGE_WIDTH; j++)
+       {
+           image[i][j] = 255 *  ((i+j) % 5 % 3 % 2) ;
+       }
+   }
+    
+    
+    const size_t NUM_CENTRAL_MOMENTS = 7; //m11, m12, m20, m02, m30, m03 is enough for computing HU moments
+    double moments[NUM_CENTRAL_MOMENTS];
+    
+    computeMomentsWithOpenCL(image, IMAGE_WIDTH, IMAGE_HEIGHT, moments, NUM_CENTRAL_MOMENTS);
 }
