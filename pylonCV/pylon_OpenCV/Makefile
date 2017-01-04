@@ -2,7 +2,7 @@
 .PHONY: all clean
 
 # The program to build
-NAME       := liveHuMomentsPylonCam
+NAME       := pylon_openCV
 
 # Installation directories for pylon
 PYLON_ROOT ?= /opt/pylon5
@@ -24,9 +24,9 @@ $(NAME).o: $(NAME).cpp
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c -o $@ $<
 
 welcome:
-	@echo -------------------------------------------
-	@echo ------ Pylon Camera Hu Moments Live -------
-	@echo -------------------------------------------
+	@echo ---------------------------------------
+	@echo ------ Pylon Camera with OpenCV -------
+	@echo ---------------------------------------
 	
 clean:
 	$(RM) $(NAME).o $(NAME)
