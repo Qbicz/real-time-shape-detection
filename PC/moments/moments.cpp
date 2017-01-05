@@ -35,7 +35,7 @@ void thresh_callback(int, void* );
 void drawAxis(Mat& img, Point p, Point q, Scalar colour, const float scale);
 cl_device_id create_device();
 cl_program build_program(cl_context ctx, cl_device_id dev, const char* filename);
-void computeMomentsWithOpenCL(cv::Mat& frame, double* moments, const int NUM_CENTRAL_MOMENTS);
+double computeMomentsWithOpenCL(cv::Mat& frame, double* moments, const int NUM_CENTRAL_MOMENTS);
 
 
 /** @function main */
@@ -140,18 +140,17 @@ void thresh_callback(int, void* )
    *  TODO: add PCA and draw orientation: major PCA direction multiplied by 7th Hu moment
    */ 
   clock_t end = clock();
-  double time_spent = 1000 * ((double)(end - begin) / CLOCKS_PER_SEC);
-
-
+  double timeSpentInOpenCV = 1000 * ((double)(end - begin) / CLOCKS_PER_SEC);
+  
   /// Show in a window
   namedWindow( "Contours", CV_WINDOW_AUTOSIZE );
   imshow( "Contours", drawing ); 
 
   /// Calculate the area with the moments 00 and compare with the result of the OpenCV function
-  printf("\t Info: Area and Contour Length \n");
+  //printf("\t Info: Area and Contour Length \n");
   for(size_t i = 0; i< contours.size(); i++ )
      {
-       printf(" * Contour[%zu] - Area (M_00) = %.2f - Area OpenCV: %.2f - Length: %.2f \n", i, mu[i].m00, contourArea(contours[i]), arcLength( contours[i], true ) );
+       //printf(" * Contour[%zu] - Area (M_00) = %.2f - Area OpenCV: %.2f - Length: %.2f \n", i, mu[i].m00, contourArea(contours[i]), arcLength( contours[i], true ) );
        Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
        drawContours( drawing, contours, i, color, 2, 8, hierarchy, 0, Point() );
        circle( drawing, mc[i], 4, color, -1, 8, 0 );
@@ -176,7 +175,7 @@ void thresh_callback(int, void* )
       return;
   }     
   
-    computeMomentsWithOpenCL(contour, moments, NUM_CENTRAL_MOMENTS);
+   double timeSpentInOpenCL = computeMomentsWithOpenCL(contour, moments, NUM_CENTRAL_MOMENTS);
     
      //Check the answers
     
@@ -217,16 +216,8 @@ void thresh_callback(int, void* )
            m03 += cx*cx*cx*data2d[i][j];           
        }
    } 
-      //Results 
-    printf("Elapsed time in OpenCV: %f [ms]\n", time_spent);
-    
-    //printf("Moment M00\t%8.2f\n", im_mom.m00);
-    //printf("Moment M01\t%8.2f\n", im_mom.m01);
-    //printf("Moment M10\t%8.2f\n", im_mom.m10);
-
-
-    //printf("Center of mass: [%f, %f]\n", x_, y_);
-    //printf("Validiating the answers...\n");
+      //Results  
+      //printf("Validiating the answers...\n");
     printf("[Moment]\t\t[Pure C]\t[OpenCV]\t[OpenCL] \n");
     printf("Moment M00\t\t%8e\t%8e\tN/A\n", m00, im_mom.m00);
     printf("Moment M01\t\t%8e\t%8e\tN/A\n", m10, im_mom.m01); //ugly hack - m01 instead of m10, values are not used again so its ok
@@ -256,8 +247,6 @@ void thresh_callback(int, void* )
     printf("Norm. centr. moment N02\tN/A \t\t%8e\t%8e\n", im_mom.nu02, nu02);
     printf("Norm. centr. moment N11\tN/A \t\t%8e\t%8e\n", im_mom.nu11, nu11);
 
-
-    //printf("Computing Hu invariants\n");
     //instead of computing hu moments by hand we can fall back to OpenCV implementation again
     Moments openClMoments;
     openClMoments.m00 = m00; openClMoments.m01 = m10; openClMoments.m10 = m01;
@@ -280,6 +269,10 @@ void thresh_callback(int, void* )
     printf("Hu invariant Hu5\tN/A \t\t%8e\t%8e\n", huMoments[i][4], huOpenCl[4]);
     printf("Hu invariant Hu6\tN/A \t\t%8e\t%8e\n", huMoments[i][5], huOpenCl[5]);
     printf("Hu invariant Hu7\tN/A \t\t%8e\t%8e\n", huMoments[i][6], huOpenCl[6]);
+  
+    printf("Elapsed time in OpenCV: %f [ms]\n", timeSpentInOpenCV);
+    printf("Elapsed time in OpenCL: %f [ms]\n", timeSpentInOpenCL);
+
   }
 }
 
@@ -395,7 +388,7 @@ cl_program build_program(cl_context ctx, cl_device_id dev, const char* filename)
 #include <time.h>
 #include <math.h>
 
-void computeMomentsWithOpenCL(cv::Mat& frame, double* moments, const int NUM_CENTRAL_MOMENTS)
+double computeMomentsWithOpenCL(cv::Mat& frame, double* moments, const int NUM_CENTRAL_MOMENTS)
 {
 
   if(frame.isContinuous())
@@ -532,9 +525,6 @@ void computeMomentsWithOpenCL(cv::Mat& frame, double* moments, const int NUM_CEN
     
     clock_t end = clock();
     double time_spent = 1000 * ((double)(end - begin) / CLOCKS_PER_SEC);
-    
-    //Results 
-    printf("Elapsed time in OpenCL: %f [ms]\n", time_spent);
 
    /* Deallocate resources */
    clReleaseKernel(kernel);
@@ -544,4 +534,6 @@ void computeMomentsWithOpenCL(cv::Mat& frame, double* moments, const int NUM_CEN
    clReleaseCommandQueue(queue);
    clReleaseProgram(program);
    clReleaseContext(context);
+
+    return time_spent;
 }
