@@ -1,16 +1,3 @@
-/*
-   This sample illustrates how to grab and process images using the CInstantCamera class.
-   The images are grabbed and processed asynchronously, i.e.,
-   while the application is processing a buffer, the acquisition of the next buffer is done
-   in parallel.
-
-   The CInstantCamera class uses a pool of buffers to retrieve image data
-   from the camera device. Once a buffer is filled and ready,
-   the buffer can be retrieved from the camera object for processing. The buffer
-   and additional image data are collected in a grab result. The grab result is
-   held by a smart pointer after retrieval. The buffer is automatically reused
-   when explicitly released or when the smart pointer object is destroyed.
-*/
 // Include files to use OpenCV API.
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -32,10 +19,6 @@ using namespace cv;
 
 // Namespace for using cout.
 using namespace std;
-
-// Define if images and videos are to be saved.
-#define saveImages  1
-#define recordVideo 1
 
 // Number of images to be grabbed.
 static const uint32_t c_countOfImagesToGrab = 1000;
@@ -60,49 +43,28 @@ int main(int argc, char* argv[])
         // Print the model name of the camera.
         cout << "Using device " << camera.GetDeviceInfo().GetModelName() << endl;
 
-        
         // TODO: ustawic niska rozdzielczosc zdjecia akwizycji
 
         // The parameter MaxNumBuffer can be used to control the count of buffers
         // allocated for grabbing. The default value of this parameter is 10.
-        camera.MaxNumBuffer = 20;
+        camera.MaxNumBuffer = 2;
 
         // create pylon image format converter and pylon image
         CImageFormatConverter formatConverter;
         formatConverter.OutputPixelFormat= PixelType_BGR8packed;
         CPylonImage pylonImage;
 
-        // Get camera nodemap to access parameters
-        INodeMap& nodemap = camera.GetNodeMap();
-        
-        // Create pointers to access the camera Width and Height
-        CIntegerPtr width = nodemap.GetNode("Width");
-        CIntegerPtr height = nodemap.GetNode("Height");
-        
-        // Create an OpenCV video creator
-        VideoWriter cvVideoCreator;
         // Create an OpenCV image
         Mat openCvImage;
-        
-        // define video name
-        string videoFileName = "OpenCvVideo.avi";
-        
-        // define the video frame size.
-        cv::Size frameSize = Size((int)width->GetValue(), (int)(height->GetValue()));
-        cout << "Video frame size: " << (int)width->GetValue() << ", " << (int)(height->GetValue() << endl;
-        
-        // set the codec and frame rate
-        cvVideoCreator.open(videoFileName, CV_FOURCC('D', 'I', 'V', 'X'), 60, frameSize, true);
-        
+
         // Start the grabbing of c_countOfImagesToGrab images.
         // The camera device is parameterized with a default configuration which
         // sets up free-running continuous acquisition.
-        camera.StartGrabbing( c_countOfImagesToGrab, GrabStrategy_LatestImageOnly);
+        camera.StartGrabbing( c_countOfImagesToGrab);
 
         // This smart pointer will receive the grab result data.
         CGrabResultPtr ptrGrabResult;
 
-        
         // Camera.StopGrabbing() is called automatically by the RetrieveResult() method
         // when c_countOfImagesToGrab images have been retrieved.
         while ( camera.IsGrabbing())
@@ -118,34 +80,35 @@ int main(int argc, char* argv[])
                 // cout << "SizeY: " << ptrGrabResult->GetHeight() << endl;
                 const uint8_t *pImageBuffer = (uint8_t *) ptrGrabResult->GetBuffer();
                 // cout << "Gray value of first pixel: " << (uint32_t) pImageBuffer[0] << endl << endl;
-		
+
                 // Convert the grabbed buffer to pylon imag
                 formatConverter.Convert(pylonImage, ptrGrabResult);
                 // Create an OpenCV image out of pylon image
                 openCvImage= cv::Mat(ptrGrabResult->GetHeight(), ptrGrabResult->GetWidth(), CV_8UC3, (uint8_t *) pylonImage.GetBuffer());
 
-                // set saveImages to '1' to save images.
-                if (saveImages)
-                {
-                    // current image name for saving
-                    std::ostringstream s;
-                    // create image name files with ascending grabbed image numbers.
-                    s << "image_" << grabbedImages << ".jpg";
-                    std::string imageName(s.str());
-                    // Save an OpenCV image.
-                    imwrite(imageName, openCvImage);
-                    grabbedImages++;
-                }
-                
-                if(recordVideo)
-                    cvVideoCreator.write(openCvImage);
-                
+                /*
+                 * Hu Moments computation
+                 */
+                Mat gray;
+                cvtColor(frame, gray, COLOR_BGR2GRAY);
+
+                Mat canny_output;
+                vector<vector<Point> > contours;
+                vector<Vec4i> hierarchy;
+
+                /// Detect edges using canny
+                Canny( gray, canny_output, thresh, thresh*2, 3 );
+
+                /*
+                 * Moments computation end
+                 */
+
                 // Create a display window
                 namedWindow( "OpenCV Display Window", CV_WINDOW_NORMAL);//AUTOSIZE //FREERATIO
                 // Display the current image with opencv
                 imshow( "OpenCV Display Window", openCvImage);
                 // Define a timeout for customer's input in ms.
-                // '0' means indefinite, i.e. the next image will be displayed after closing the window 
+                // '0' means indefinite, i.e. the next image will be displayed after closing the window
                 // '1' means live stream
                 waitKey(1);
 
@@ -171,3 +134,33 @@ int main(int argc, char* argv[])
     return exitCode;
 }
 
+
+
+/**
+ * @function drawAxis
+ */
+void drawAxis(Mat& img, Point p, Point q, Scalar colour, const float scale)
+{
+//! [visualization1]
+    double angle;
+    double hypotenuse;
+    angle = atan2( (double) p.y - q.y, (double) p.x - q.x ); // angle in radians
+    hypotenuse = sqrt( (double) (p.y - q.y) * (p.y - q.y) + (p.x - q.x) * (p.x - q.x));
+//    double degrees = angle * 180 / CV_PI; // convert radians to degrees (0-180 range)
+//    cout << "Degrees: " << abs(degrees - 180) << endl; // angle in 0-360 degrees range
+
+    // Here we lengthen the arrow by a factor of scale
+    q.x = (int) (p.x - scale * hypotenuse * cos(angle));
+    q.y = (int) (p.y - scale * hypotenuse * sin(angle));
+    line(img, p, q, colour, 1, CV_AA);
+
+    // create the arrow hooks
+    p.x = (int) (q.x + 9 * cos(angle + CV_PI / 4));
+    p.y = (int) (q.y + 9 * sin(angle + CV_PI / 4));
+    line(img, p, q, colour, 1, CV_AA);
+
+    p.x = (int) (q.x + 9 * cos(angle - CV_PI / 4));
+    p.y = (int) (q.y + 9 * sin(angle - CV_PI / 4));
+    line(img, p, q, colour, 1, CV_AA);
+//! [visualization1]
+}

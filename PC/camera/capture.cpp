@@ -1,9 +1,15 @@
 #include "opencv2/opencv.hpp"
 #include <stdio.h>
+#include <iostream>
 
+using namespace std;
 using namespace cv;
 int thresh = 140;
-RNG rng(12345);
+//RNG rng(12345);
+
+// Function declarations
+void drawAxis(Mat&, Point, Point, Scalar, const float);
+double getOrientation(const vector<Point> &, Mat&);
 
 int main(int, char**)
 {
@@ -13,50 +19,52 @@ int main(int, char**)
 	printf("camera 0 not found!\n");
 	return -1;
     }
+    printf("Camera opened!");
     Mat gray;
+    Mat src;
     namedWindow("edges",1);
     for(;;)
     {
-        Mat frame;
-        cap >> frame; // get a new frame from camera
-        cvtColor(frame, gray, COLOR_BGR2GRAY);
-        GaussianBlur(gray, gray, Size(7,7), 1.5, 1.5);
-        //Canny(edges, edges, 0, 30, 3);
+        cap >> src; // get a new frame from camera
+        cvtColor(src, gray, COLOR_BGR2GRAY);
 
-        //getMoments();
-        Mat canny_output;
-        vector<vector<Point> > contours;
-        vector<Vec4i> hierarchy;
+        //printf("Image captured and converted to grayscale!");
 
+        /// Convert image to binary
+        Mat bw;
+        //threshold(gray, bw, 50, 255, CV_THRESH_BINARY | CV_THRESH_OTSU);
         /// Detect edges using canny
-        Canny( gray, canny_output, thresh, thresh*2, 3 );
-        /// Find contours
-        findContours( canny_output, contours, hierarchy, CV_RETR_TREE, CV_CHAIN_APPROX_SIMPLE, Point(0, 0) );
+        Canny( gray, bw, thresh, thresh*2, 3 );
+        imshow("bw", bw);
+        //! [contours]
+        // Find all the contours in the thresholded image
+        vector<Vec4i> hierarchy;
+        vector<vector<Point> > contours;
+        findContours(bw, contours, hierarchy, CV_RETR_LIST, CV_CHAIN_APPROX_NONE);
 
-        /// Get the moments
-        vector<Moments> mu(contours.size() );
-        for( int i = 0; i < contours.size(); i++ )
-           { mu[i] = moments( contours[i], false ); }
-
-        /// Compute Hu moments - use to tell the difference between mirrored objects/rotated 180 degrees
-        for( int i = 0; i < contours.size(); i++)
+        for (size_t i = 0; i < contours.size(); ++i)
+        //for (size_t i = 0; i < 5; ++i)
         {
-            Moments mom = mu[i];
-            double hu[7];
-            HuMoments(mom, hu);
-            printf("Hu invariants for contour %d:\n", i);
-            for( int i = 0; i < 7; i++ )
-               printf("[%d]=%.4e ", i+1, hu[i]);
-            printf("\n");
+            // Calculate the area of each contour
+            double area = contourArea(contours[i]);
+            // Ignore contours that are too small or too large
+            if (area < 1e3 || area > 1e6) continue;
+            // <Nokia 920 back>
+
+            printf("area = %f for contour %u\n", area, i);
+
+            // Draw each contour only for visualisation purposes
+            //printf("drawContours");
+            drawContours(src, contours, static_cast<int>(i), Scalar(0, 0, 255), 2, 8, hierarchy, 0);
+            // Find the orientation of each shape
+            //printf("getOrientation");
+            getOrientation(contours[i], src);
         }
+        //! [contours]
 
-        // TODO: draw 7th Hu moment as an arrow on the frame
 
-        ///  Get the mass centers:
-        vector<Point2f> mc( contours.size() );
-        for( int i = 0; i < contours.size(); i++ )
-           { mc[i] = Point2f( mu[i].m10/mu[i].m00 , mu[i].m01/mu[i].m00 ); }
 
+/*
         /// Draw contours
         Mat drawing = Mat::zeros( canny_output.size(), CV_8UC3 );
         for( int i = 0; i< contours.size(); i++ )
@@ -65,13 +73,15 @@ int main(int, char**)
              drawContours( drawing, contours, i, color, 2, 8, hierarchy, 0, Point() );
              circle( drawing, mc[i], 4, color, -1, 8, 0 );
            }
-
+*/
         /// Show in a window
-        namedWindow( "Contours", CV_WINDOW_AUTOSIZE );
-        imshow( "Contours", drawing );
+        //imshow( "Contours", contours);
+        imshow( "Orientation", src);
 
-        imshow("edges", canny_output);
+        //imshow("edges", canny_output);
         if(waitKey(30) >= 0) break;
+
+
     }
     // the camera will be deinitialized automatically in VideoCapture destructor
     return 0;
@@ -83,3 +93,82 @@ void getMoments()
 {
     // all moments code
 }
+
+
+/**
+ * @function drawAxis
+ */
+void drawAxis(Mat& img, Point p, Point q, Scalar colour, const float scale = 10)
+{
+//! [visualization1]
+    double angle;
+    double hypotenuse;
+    angle = atan2( (double) p.y - q.y, (double) p.x - q.x ); // angle in radians
+    hypotenuse = sqrt( (double) (p.y - q.y) * (p.y - q.y) + (p.x - q.x) * (p.x - q.x));
+//    double degrees = angle * 180 / CV_PI; // convert radians to degrees (0-180 range)
+//    cout << "Degrees: " << abs(degrees - 180) << endl; // angle in 0-360 degrees range
+
+    // Here we lengthen the arrow by a factor of scale
+    q.x = (int) (p.x - scale * hypotenuse * cos(angle));
+    q.y = (int) (p.y - scale * hypotenuse * sin(angle));
+    line(img, p, q, colour, 1, CV_AA);
+
+    // create the arrow hooks
+    p.x = (int) (q.x + 9 * cos(angle + CV_PI / 4));
+    p.y = (int) (q.y + 9 * sin(angle + CV_PI / 4));
+    line(img, p, q, colour, 1, CV_AA);
+
+    p.x = (int) (q.x + 9 * cos(angle - CV_PI / 4));
+    p.y = (int) (q.y + 9 * sin(angle - CV_PI / 4));
+    line(img, p, q, colour, 1, CV_AA);
+//! [visualization1]
+}
+
+/**
+ * @function getOrientation
+ */
+double getOrientation(const vector<Point> &pts, Mat &img)
+{
+//! [pca]
+    //Construct a buffer used by the pca analysis
+    int sz = static_cast<int>(pts.size());
+    Mat data_pts = Mat(sz, 2, CV_64FC1);
+    for (int i = 0; i < data_pts.rows; ++i)
+    {
+        data_pts.at<double>(i, 0) = pts[i].x;
+        data_pts.at<double>(i, 1) = pts[i].y;
+    }
+
+    //Perform PCA analysis
+    PCA pca_analysis(data_pts, Mat(), CV_PCA_DATA_AS_ROW);
+
+    //Store the center of the object
+    Point cntr = Point(static_cast<int>(pca_analysis.mean.at<double>(0, 0)),
+                      static_cast<int>(pca_analysis.mean.at<double>(0, 1)));
+
+    //Store the eigenvalues and eigenvectors
+    vector<Point2d> eigen_vecs(2);
+    vector<double> eigen_val(2);
+    for (int i = 0; i < 2; ++i)
+    {
+        eigen_vecs[i] = Point2d(pca_analysis.eigenvectors.at<double>(i, 0),
+                                pca_analysis.eigenvectors.at<double>(i, 1));
+
+        eigen_val[i] = pca_analysis.eigenvalues.at<double>(0, i);
+    }
+
+//! [pca]
+//! [visualization]
+    // Draw the principal components
+    circle(img, cntr, 3, Scalar(255, 0, 255), 2);
+    Point p1 = cntr + 0.02 * Point(static_cast<int>(eigen_vecs[0].x * eigen_val[0]), static_cast<int>(eigen_vecs[0].y * eigen_val[0]));
+    Point p2 = cntr - 0.02 * Point(static_cast<int>(eigen_vecs[1].x * eigen_val[1]), static_cast<int>(eigen_vecs[1].y * eigen_val[1]));
+    drawAxis(img, cntr, p1, Scalar(0, 255, 0), 1);
+    drawAxis(img, cntr, p2, Scalar(255, 255, 0), 5);
+
+    double angle = atan2(eigen_vecs[0].y, eigen_vecs[0].x); // orientation in radians
+//! [visualization]
+
+    return angle;
+}
+
