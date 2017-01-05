@@ -25,7 +25,7 @@ using namespace std;
 static const uint32_t c_countOfImagesToGrab = 1000;
 
 // Function declarations - TODO: move to file which will be #included
-double preprocessAndComputeOrientation(Mat& src, const int thresh = 140);
+double preprocessAndComputeOrientation(Mat& src, const int thresh = 100);
 void drawAxis(Mat&, Point, Point, Scalar, const float);
 double getOrientation(const vector<Point> &, Mat&);
 
@@ -110,9 +110,10 @@ int main(int argc, char* argv[])
                 waitKey(1);
 
             }
+            
             else
             {
-                cout << "Error: " << ptrGrabResult->GetErrorCode() << " " << ptrGrabResult->GetErrorDescription() << endl;
+                //cout << "Error: " << ptrGrabResult->GetErrorCode() << " " << ptrGrabResult->GetErrorDescription() << endl;
             }
         }
     }
@@ -148,6 +149,8 @@ double preprocessAndComputeOrientation(Mat& src, const int thresh)
     //threshold(gray, bw, 50, 255, CV_THRESH_BINARY | CV_THRESH_OTSU);
     /// Detect edges using canny
     Canny( gray, bw, thresh, thresh*2, 3 );
+    
+    namedWindow( "Edges", CV_WINDOW_NORMAL);//AUTOSIZE
     imshow("bw", bw);
     //! [contours]
     // Find all the contours in the thresholded image
@@ -161,7 +164,7 @@ double preprocessAndComputeOrientation(Mat& src, const int thresh)
         // Calculate the area of each contour
         double area = contourArea(contours[i]);
         // Ignore contours that are too small or too large
-        if (area < 1e3 || area > 1e6) continue;
+        if (area < 40 || area > 1e6) continue;
         // <Nokia 920 back>
 
         printf("area = %f for contour %u\n", area, i);
@@ -182,7 +185,7 @@ double preprocessAndComputeOrientation(Mat& src, const int thresh)
 /**
  * @function drawAxis
  */
-void drawAxis(Mat& img, Point p, Point q, Scalar colour, const float scale = 10)
+void drawAxis(Mat& img, Point p, Point q, Scalar colour, const float scale = 200)
 {
 //! [visualization1]
     double angle;
