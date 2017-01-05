@@ -68,6 +68,8 @@ void thresh_callback(int, void* )
   clock_t begin = clock();  
   Mat canny_output;
   vector<vector<Point> > contours;
+  
+  vector<vector<double>> huMoments;  
   vector<Vec4i> hierarchy;
 
   /// Detect edges using canny
@@ -114,17 +116,20 @@ void thresh_callback(int, void* )
        circle( drawing, mc[i], 4, color, -1, 8, 0 );
      }
      
-    
   /// Compute Hu moments - use to tell the difference between mirrored objects/rotated 180 degrees
   for(size_t i = 0; i < contours.size(); i++)
   {
       Moments mom = mu[i];
       double hu[7];
       HuMoments(mom, hu);
-      printf("Hu invariants for contour %zu:\n", i);
-      for( int i = 0; i < 7; i++ )
-         printf("[%d]=%.4e ", i+1, hu[i]);
-      printf("\n");
+      
+      vector<double> huTmp = {hu[0], hu[1], hu[2], hu[3], hu[4], hu[5], hu[6]};
+      huMoments.push_back(huTmp);
+            
+      //printf("Hu invariants for contour %zu:\n", i);
+      //for( int i = 0; i < 7; i++ )
+         //printf("[%d]=%.4e ", i+1, hu[i]);
+      //printf("\n");
 
       /// Show 7th Hu moment as an arrow from the mass center
       // mass_center = mc[i];
@@ -235,17 +240,24 @@ void thresh_callback(int, void* )
     printf("Central Moment Mu30\t%8e\t%8e\t%8e\n", m30, im_mom.mu30, moments[6]);
 
     //printf("Computing normalized central moments...\n");
-    double n21 = m21 / powf(m00, 2.5),
-           n03 = m03 / powf(m00, 2.5),
-           n30 = m30 / powf(m00, 2.5),
-           n12 = m12 / powf(m00, 2.5);
+    double nu21 = m21 / powf(m00, 2.5),
+           nu03 = m03 / powf(m00, 2.5),
+           nu30 = m30 / powf(m00, 2.5),
+           nu12 = m12 / powf(m00, 2.5),
+           nu20 = m20 / powf(m00, 2),
+           nu02 = m02 / powf(m00, 2),
+           nu11 = m11 / powf(m00, 2);
     
-    printf("Norm. centr. moment N21\tN/A \t\t%8e\t%8e\n", im_mom.nu21, n21);
-    printf("Norm. centr. moment N03\tN/A \t\t%8e\t%8e\n", im_mom.nu03, n03);
-    printf("Norm. centr. moment N30\tN/A \t\t%8e\t%8e\n", im_mom.nu30, n30);
-    printf("Norm. centr. moment N12\tN/A \t\t%8e\t%8e\n", im_mom.nu12, n12);
+    printf("Norm. centr. moment N21\tN/A \t\t%8e\t%8e\n", im_mom.nu21, nu21);
+    printf("Norm. centr. moment N03\tN/A \t\t%8e\t%8e\n", im_mom.nu03, nu03);
+    printf("Norm. centr. moment N30\tN/A \t\t%8e\t%8e\n", im_mom.nu30, nu30);
+    printf("Norm. centr. moment N12\tN/A \t\t%8e\t%8e\n", im_mom.nu12, nu12);
+    printf("Norm. centr. moment N20\tN/A \t\t%8e\t%8e\n", im_mom.nu20, nu20);
+    printf("Norm. centr. moment N02\tN/A \t\t%8e\t%8e\n", im_mom.nu02, nu02);
+    printf("Norm. centr. moment N11\tN/A \t\t%8e\t%8e\n", im_mom.nu11, nu11);
 
 
+    //printf("Computing Hu invariants\n");
     //instead of computing hu moments by hand we can fall back to OpenCV implementation again
     Moments openClMoments;
     openClMoments.m00 = m00; openClMoments.m01 = m10; openClMoments.m10 = m01;
@@ -253,21 +265,21 @@ void thresh_callback(int, void* )
     openClMoments.mu11 = m11; openClMoments.mu03 = m03; openClMoments.mu02 = m02; openClMoments.mu12 = m12;
     openClMoments.mu21 = m21; openClMoments.mu20 = m20; openClMoments.mu30 = m30;
     
+    openClMoments.nu11 = nu11; openClMoments.nu03 = nu03; openClMoments.nu02 = nu02; openClMoments.nu12 = nu12;
+    openClMoments.nu21 = nu21; openClMoments.nu20 = nu20; openClMoments.nu30 = nu30;
+        
+    
     //and so on, remember to check m10 and m01
-
     double huOpenCl[7];
     HuMoments(openClMoments, huOpenCl);
     
-    
-    
-    printf("Computing Hu moments...\n");
-    float Hu7 = (3*n21-n03)*(n30+n12)*( (n30+n12) * (n30+n12) - 3 * (n21+n03)*(n21+n03) ) - 
-                 (n30-3*n12) * (n21+n03) * ( 3*(n30+n12)*(n30+n12) -(n21+n03)*(n21+n03) );
-    float Hu7Cv = (3*n21-n03)*(n12+n30)*(3* (n30+n12) * (n30+n12) - (n21+n03)*(n21+n03) ) - 
-                 (n30-3*n12) * (n21+n03) * ( 3*(n30+n12)*(n30+n12) -(n21+n03)*(n21+n03) );
-
-    printf("Hu7 = %e, Hu7CV_equation = %e Hu7 OpenCV based on opencl moments = %e\n", Hu7, Hu7Cv, huOpenCl[6]);   
-      
+    printf("Hu invariant Hu1\tN/A \t\t%8e\t%8e\n", huMoments[i][0], huOpenCl[0]);
+    printf("Hu invariant Hu2\tN/A \t\t%8e\t%8e\n", huMoments[i][1], huOpenCl[1]);
+    printf("Hu invariant Hu3\tN/A \t\t%8e\t%8e\n", huMoments[i][2], huOpenCl[2]);
+    printf("Hu invariant Hu4\tN/A \t\t%8e\t%8e\n", huMoments[i][3], huOpenCl[3]);
+    printf("Hu invariant Hu5\tN/A \t\t%8e\t%8e\n", huMoments[i][4], huOpenCl[4]);
+    printf("Hu invariant Hu6\tN/A \t\t%8e\t%8e\n", huMoments[i][5], huOpenCl[5]);
+    printf("Hu invariant Hu7\tN/A \t\t%8e\t%8e\n", huMoments[i][6], huOpenCl[6]);
   }
 }
 

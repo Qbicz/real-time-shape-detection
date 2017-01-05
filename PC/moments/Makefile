@@ -28,7 +28,7 @@ PROJ = moments
 $(info "INC_DIRS:" $(INC_DIRS))
 $(info "LIB_DIRS:" $(LIB_DIRS))
 
-all: welcome clean $(PROJ)
+all: welcome $(PROJ)
 
 $(PROJ): $(PROJ).cpp
 	$(CXX) $(CXXFLAGS) -o $@ $^ $(INC_DIRS:%=-I%) $(LIB_DIRS:%=-L%) $(OPENCV_LIBS) $(OPENCL_LIBS)
