@@ -109,14 +109,14 @@ __kernel void moments(__global float8* data,
              moment20 += (i+1 - x_) *(i+1 - x_) * group_result[0 + i*COMPUTED_MOMENTS];
              moment30 += (i+1 - x_) *(i+1 - x_) * (i+1 - x_) * group_result[0 + i*COMPUTED_MOMENTS];
           }
-          
-          central_moments[0] = moment02;
-          central_moments[1] = moment03;
+          //messed up the moments to match those computed in opencv
+          central_moments[0] = moment20;
+          central_moments[1] = moment30;
           central_moments[2] = moment11;
-          central_moments[3] = moment12;
-          central_moments[4] = moment20;
-          central_moments[5] = moment21;
-          central_moments[6] = moment30;
+          central_moments[3] = moment21;
+          central_moments[4] = moment02;
+          central_moments[5] = moment12;
+          central_moments[6] = moment03;
       }
       
       //~ printf("Number of workgroups left: %d\n", *workgroups_left);
