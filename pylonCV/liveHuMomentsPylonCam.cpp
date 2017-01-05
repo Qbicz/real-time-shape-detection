@@ -22,7 +22,7 @@ using namespace cv;
 using namespace std;
 
 // Number of images to be grabbed.
-static const uint32_t c_countOfImagesToGrab = 1000;
+static const uint32_t c_countOfImagesToGrab = 10000;
 
 // Function declarations - TODO: move to file which will be #included
 double preprocessAndComputeOrientation(Mat& src, const int thresh = 100);
@@ -142,8 +142,6 @@ double preprocessAndComputeOrientation(Mat& src, const int thresh)
     Mat gray;
     cvtColor(src, gray, COLOR_BGR2GRAY);
 
-    //printf("Image captured and converted to grayscale!");
-
     /// Convert image to binary
     Mat bw;
     //threshold(gray, bw, 50, 255, CV_THRESH_BINARY | CV_THRESH_OTSU);
@@ -151,7 +149,7 @@ double preprocessAndComputeOrientation(Mat& src, const int thresh)
     Canny( gray, bw, thresh, thresh*2, 3 );
     
     namedWindow( "Edges", CV_WINDOW_NORMAL);//AUTOSIZE
-    imshow("bw", bw);
+    imshow("Edges", bw);
     //! [contours]
     // Find all the contours in the thresholded image
     vector<Vec4i> hierarchy;
@@ -159,21 +157,18 @@ double preprocessAndComputeOrientation(Mat& src, const int thresh)
     findContours(bw, contours, hierarchy, CV_RETR_LIST, CV_CHAIN_APPROX_NONE);
 
     for (size_t i = 0; i < contours.size(); ++i)
-    //for (size_t i = 0; i < 5; ++i)
     {
         // Calculate the area of each contour
         double area = contourArea(contours[i]);
         // Ignore contours that are too small or too large
-        if (area < 40 || area > 1e6) continue;
+        if (area < 1e2 || area > 1e6) continue;
         // <Nokia 920 back>
 
         printf("area = %f for contour %u\n", area, i);
 
         // Draw each contour only for visualisation purposes
-        //printf("drawContours");
         drawContours(src, contours, static_cast<int>(i), Scalar(0, 0, 255), 2, 8, hierarchy, 0);
         // Find the orientation of each shape
-        //printf("getOrientation");
         angle = getOrientation(contours[i], src);
     }
     //! [contours]
