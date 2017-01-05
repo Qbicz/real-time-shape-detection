@@ -4,10 +4,11 @@
 
 using namespace std;
 using namespace cv;
-int thresh = 140;
+//int thresh = 140;
 //RNG rng(12345);
 
 // Function declarations
+double preprocessAndComputeOrientation(Mat& src, const int thresh = 140);
 void drawAxis(Mat&, Point, Point, Scalar, const float);
 double getOrientation(const vector<Point> &, Mat&);
 
@@ -26,6 +27,8 @@ int main(int, char**)
     for(;;)
     {
         cap >> src; // get a new frame from camera
+        preprocessAndComputeOrientation(src);
+#if 0
         cvtColor(src, gray, COLOR_BGR2GRAY);
 
         //printf("Image captured and converted to grayscale!");
@@ -61,19 +64,7 @@ int main(int, char**)
             getOrientation(contours[i], src);
         }
         //! [contours]
-
-
-
-/*
-        /// Draw contours
-        Mat drawing = Mat::zeros( canny_output.size(), CV_8UC3 );
-        for( int i = 0; i< contours.size(); i++ )
-           {
-             Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
-             drawContours( drawing, contours, i, color, 2, 8, hierarchy, 0, Point() );
-             circle( drawing, mc[i], 4, color, -1, 8, 0 );
-           }
-*/
+#endif
         /// Show in a window
         //imshow( "Contours", contours);
         imshow( "Orientation", src);
@@ -89,9 +80,49 @@ int main(int, char**)
 
 // in callback only change threshold. perform all operations in loop
 
-void getMoments()
+double preprocessAndComputeOrientation(Mat& src, const int thresh)
 {
-    // all moments code
+    // Return value
+    double angle;
+
+    Mat gray;
+    cvtColor(src, gray, COLOR_BGR2GRAY);
+
+    //printf("Image captured and converted to grayscale!");
+
+    /// Convert image to binary
+    Mat bw;
+    //threshold(gray, bw, 50, 255, CV_THRESH_BINARY | CV_THRESH_OTSU);
+    /// Detect edges using canny
+    Canny( gray, bw, thresh, thresh*2, 3 );
+    imshow("bw", bw);
+    //! [contours]
+    // Find all the contours in the thresholded image
+    vector<Vec4i> hierarchy;
+    vector<vector<Point> > contours;
+    findContours(bw, contours, hierarchy, CV_RETR_LIST, CV_CHAIN_APPROX_NONE);
+
+    for (size_t i = 0; i < contours.size(); ++i)
+    //for (size_t i = 0; i < 5; ++i)
+    {
+        // Calculate the area of each contour
+        double area = contourArea(contours[i]);
+        // Ignore contours that are too small or too large
+        if (area < 1e3 || area > 1e6) continue;
+        // <Nokia 920 back>
+
+        printf("area = %f for contour %u\n", area, i);
+
+        // Draw each contour only for visualisation purposes
+        //printf("drawContours");
+        drawContours(src, contours, static_cast<int>(i), Scalar(0, 0, 255), 2, 8, hierarchy, 0);
+        // Find the orientation of each shape
+        //printf("getOrientation");
+        angle = getOrientation(contours[i], src);
+    }
+    //! [contours]
+
+    return angle;
 }
 
 

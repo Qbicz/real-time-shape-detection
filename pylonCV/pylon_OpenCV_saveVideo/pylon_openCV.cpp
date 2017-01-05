@@ -71,6 +71,7 @@ int main(int argc, char* argv[])
         CImageFormatConverter formatConverter;
         formatConverter.OutputPixelFormat= PixelType_BGR8packed;
         CPylonImage pylonImage;
+        int grabbedImages = 0;
 
         // Get camera nodemap to access parameters
         INodeMap& nodemap = camera.GetNodeMap();
@@ -88,8 +89,8 @@ int main(int argc, char* argv[])
         string videoFileName = "OpenCvVideo.avi";
         
         // define the video frame size.
-        cv::Size frameSize = Size((int)width->GetValue(), (int)(height->GetValue()));
-        cout << "Video frame size: " << (int)width->GetValue() << ", " << (int)(height->GetValue() << endl;
+        cv::Size frameSize = Size((int)width->GetValue(), (int)height->GetValue());
+        cout << "Video frame size: " << (int)width->GetValue() << ", " << (int)height->GetValue() << endl;
         
         // set the codec and frame rate
         cvVideoCreator.open(videoFileName, CV_FOURCC('D', 'I', 'V', 'X'), 60, frameSize, true);
