@@ -55,10 +55,8 @@ int main( int argc, char** argv )
   namedWindow( source_window, CV_WINDOW_AUTOSIZE );
   imshow( source_window, src );
 
-  //createTrackbar( " Canny thresh:", "Source", &thresh, max_thresh, thresh_callback );
+  createTrackbar( " Canny thresh:", "Source", &thresh, max_thresh, thresh_callback );
   thresh_callback( 0, 0 );
-
-
 
   waitKey(0);
   return(0);
@@ -101,23 +99,6 @@ void thresh_callback(int, void* )
     Scalar white = Scalar(255, 255, 255);
     drawContours( onlyContours, contours, 0, white, 1, 8, hierarchy, 0, Point() ); //to fill the contour use negative value (-1) for thickness (now 2)
     Moments im_mom = moments(onlyContours, false);
-  
-    printf("Moments in OpenCV\n");
-    printf("Moment M00\t%8.2f\n", im_mom.m00);
-    printf("Moment M01\t%8.2f\n", im_mom.m01);
-    printf("Moment M10\t%8.2f\n", im_mom.m10);
-    printf("Central Moment Mu02\t%8.2f\n", im_mom.mu02);
-    printf("Central Moment Mu03\t%8.2f\n", im_mom.mu03);
-    printf("Central Moment Mu11\t%8.2f\n", im_mom.mu11);
-    printf("Central Moment Mu12\t%8.2f\n", im_mom.mu12);
-    printf("Central Moment Mu20\t%8.2f\n", im_mom.mu20);
-    printf("Central Moment Mu21\t%8.2f\n", im_mom.mu21);
-    printf("Central Moment Mu30\t%8.2f\n", im_mom.mu30);
-
-    printf("Normalized central moment n21 = %e\n", im_mom.nu21);
-    printf("Normalized central moment n03 = %e\n", im_mom.nu03);
-    printf("Normalized central moment n30 = %e\n", im_mom.nu30);
-    printf("Normalized central moment n12 = %e\n", im_mom.nu12);   
 
     ///  Get the mass centers:
     vector<Point2f> mc( contours.size() );
@@ -159,12 +140,10 @@ void thresh_callback(int, void* )
   clock_t end = clock();
   double time_spent = 1000 * ((double)(end - begin) / CLOCKS_PER_SEC);
 
-//Results 
-  printf("Elapsed time in OpenCV: %f [ms]\n", time_spent);
 
   /// Show in a window
   namedWindow( "Contours", CV_WINDOW_AUTOSIZE );
-  imshow( "Contours", onlyContours ); //replace onlyContours with drawing
+  imshow( "Contours", drawing ); 
 
   /// Calculate the area with the moments 00 and compare with the result of the OpenCV function
   printf("\t Info: Area and Contour Length \n");
@@ -179,7 +158,33 @@ void thresh_callback(int, void* )
   const size_t NUM_CENTRAL_MOMENTS = 7; //m11, m12, m20, m02, m30, m03 is enough for computing HU moments
   double moments[NUM_CENTRAL_MOMENTS];
         
-  computeMomentsWithOpenCL(onlyContours, moments, NUM_CENTRAL_MOMENTS);
+  if(onlyContours.cols %8 != 0)
+  {
+      printf("Unable to perform openCL computations - image width must be a multiplication of 8!\n");
+      return;
+  }      
+        
+    computeMomentsWithOpenCL(onlyContours, moments, NUM_CENTRAL_MOMENTS);
+     
+  //Results 
+    printf("Elapsed time in OpenCV: %f [ms]\n", time_spent);
+    printf("Moments in OpenCV\n");
+    printf("Moment M00\t%8.2f\n", im_mom.m00);
+    printf("Moment M01\t%8.2f\n", im_mom.m01);
+    printf("Moment M10\t%8.2f\n", im_mom.m10);
+    printf("Central Moment Mu02\t%8.2f\n", im_mom.mu02);
+    printf("Central Moment Mu03\t%8.2f\n", im_mom.mu03);
+    printf("Central Moment Mu11\t%8.2f\n", im_mom.mu11);
+    printf("Central Moment Mu12\t%8.2f\n", im_mom.mu12);
+    printf("Central Moment Mu20\t%8.2f\n", im_mom.mu20);
+    printf("Central Moment Mu21\t%8.2f\n", im_mom.mu21);
+    printf("Central Moment Mu30\t%8.2f\n", im_mom.mu30);
+
+    printf("Normalized central moment n21 = %e\n", im_mom.nu21);
+    printf("Normalized central moment n03 = %e\n", im_mom.nu03);
+    printf("Normalized central moment n30 = %e\n", im_mom.nu30);
+    printf("Normalized central moment n12 = %e\n", im_mom.nu12);  
+     
      
 }
 
@@ -324,8 +329,6 @@ void computeMomentsWithOpenCL(cv::Mat& frame, double* moments, const int NUM_CEN
    }
    x_ = m10 / m00;
    y_ = m01 / m00;
-   printf("M00 = %8.2f, M01 = %8.2f, M10 = %8.2f\n", m00, m01, m10);
-   printf("Center of mass: [%f, %f]\n", x_, y_);
    
    /* OpenCL structures */
    cl_device_id device;
@@ -440,8 +443,7 @@ void computeMomentsWithOpenCL(cv::Mat& frame, double* moments, const int NUM_CEN
 
     //Check the answers
     
-    printf("Validiating the answers...\n");
-    printf("[Moment]\t[Pure C]\t[OpenCL] \n");
+
    double m11 = 0, m30 =0, m03 =0, m12 = 0, m21 = 0, m20 =0, m02 =0;
    for(int i = 0; i < IMAGE_HEIGHT; i++)
    {
@@ -450,25 +452,32 @@ void computeMomentsWithOpenCL(cv::Mat& frame, double* moments, const int NUM_CEN
            float cx = 1 + i - x_;
            float cy = 1 + j - y_;
            
-           m02 += cy*cy*data2d[i][j];
-           m03 += cy*cy*cy*data2d[i][j];
+           m20 += cy*cy*data2d[i][j];
+           m30 += cy*cy*cy*data2d[i][j];
            m11 += cx*cy*data2d[i][j];
-           m12 += cx*cy*cy*data2d[i][j];
-           m20 += cx*cx*data2d[i][j];
-           m21 += cx*cx*cy*data2d[i][j];
-           m30 += cx*cx*cx*data2d[i][j];           
+           m21 += cx*cy*cy*data2d[i][j];
+           m02 += cx*cx*data2d[i][j];
+           m12 += cx*cx*cy*data2d[i][j];
+           m03 += cx*cx*cx*data2d[i][j];           
        }
    }    
-    printf("Central Moment M02\t%8.2f\t%8.2f\n", m02,moments[0]);
-    printf("Central Moment M03\t%8.2f\t%8.2f\n", m03,moments[1]);
-    printf("Central Moment M11\t%8.2f\t%8.2f\n", m11,moments[2]);
-    printf("Central Moment M12\t%8.2f\t%8.2f\n", m12,moments[3]);
-    printf("Central Moment M20\t%8.2f\t%8.2f\n", m20,moments[4]);
-    printf("Central Moment M21\t%8.2f\t%8.2f\n", m21,moments[5]);
-    printf("Central Moment M30\t%8.2f\t%8.2f\n", m30,moments[6]);
+   //ugly hack - m01 instead of m10, values are not used again so its ok
+    printf("Moments in OpenCL\n");
+    printf("Center of mass: [%f, %f]\n", x_, y_);
+    printf("Validiating the answers...\n");
+    printf("[Moment]\t\t[Pure C]\t[OpenCL] \n");
+    printf("Moment M00\t\t%8.2f\n", m00);
+    printf("Moment M01\t\t%8.2f\n", m10);
+    printf("Moment M10\t\t%8.2f\n", m01);   
+    printf("Central Moment M02\t%8.2f\t%8.2f\n", m02, moments[0]);
+    printf("Central Moment M03\t%8.2f\t%8.2f\n", m03, moments[1]);
+    printf("Central Moment M11\t%8.2f\t%8.2f\n", m11, moments[2]);
+    printf("Central Moment M12\t%8.2f\t%8.2f\n", m12, moments[3]);
+    printf("Central Moment M20\t%8.2f\t%8.2f\n", m20, moments[4]);
+    printf("Central Moment M21\t%8.2f\t%8.2f\n", m21, moments[5]);
+    printf("Central Moment M30\t%8.2f\t%8.2f\n", m30, moments[6]);
 
     printf("Computing normalized central moments...\n");
-    printf("Check usage of powf %f\n", powf(m00, 2.5));
     double n21 = m21 / powf(m00, 2.5),
            n03 = m03 / powf(m00, 2.5),
            n30 = m30 / powf(m00, 2.5),
@@ -482,8 +491,11 @@ void computeMomentsWithOpenCL(cv::Mat& frame, double* moments, const int NUM_CEN
 
     printf("Computing Hu moments...\n");
     float Hu7 = (3*n21-n03)*(n30+n12)*( (n30+n12) * (n30+n12) - 3 * (n21+n03)*(n21+n03) ) - 
-                 (n30-3*n12) * (n12+n03) * ( 3*(n30+n12)*(n30+n12) -(n21+n03)*(n21+n03) );
-    printf("Hu7 = %e\n", Hu7);
+                 (n30-3*n12) * (n21+n03) * ( 3*(n30+n12)*(n30+n12) -(n21+n03)*(n21+n03) );
+    float Hu7Cv = (3*n21-n03)*(n12+n30)*(3* (n30+n12) * (n30+n12) - (n21+n03)*(n21+n03) ) - 
+                 (n30-3*n12) * (n21+n03) * ( 3*(n30+n12)*(n30+n12) -(n21+n03)*(n21+n03) );
+
+    printf("Hu7 = %e, Hu7CV = %e\n", Hu7, Hu7Cv);
 
 
    /* Deallocate resources */
