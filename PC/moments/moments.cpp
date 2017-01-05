@@ -94,12 +94,9 @@ void thresh_callback(int, void* )
   vector<Moments> mu(contours.size() );
   for(size_t i = 0; i < contours.size(); i++ )
      { mu[i] = moments( contours[i], false ); }
-  
-    Mat onlyContours =  Mat::zeros( canny_output.size(), CV_8UC1 );
-    Scalar white = Scalar(255, 255, 255);
-    drawContours( onlyContours, contours, 0, white, 1, 8, hierarchy, 0, Point() ); //to fill the contour use negative value (-1) for thickness (now 2)
-    Moments im_mom = moments(onlyContours, false);
-
+    
+    printf("Found contours: %zu\n", contours.size());
+    
     ///  Get the mass centers:
     vector<Point2f> mc( contours.size() );
     for(size_t i = 0; i < contours.size(); i++ )
@@ -154,38 +151,124 @@ void thresh_callback(int, void* )
        drawContours( drawing, contours, i, color, 2, 8, hierarchy, 0, Point() );
        circle( drawing, mc[i], 4, color, -1, 8, 0 );
      }
+     
+  printf("Compute moments in OpenCL and compare them to other results...\n");   
+  for(size_t i = 0; i < contours.size(); i++)
+  {
+    printf("Contour id: %zu\n", i);
+    Mat contour =  Mat::zeros( canny_output.size(), CV_8UC1 );
+    Scalar white = Scalar(255, 255, 255);
+    drawContours( contour, contours, i, white, 1, 8, hierarchy, 0, Point() ); //to fill the contour use negative value (-1) for thickness (now 2)
+    Moments im_mom = moments(contour, false);
+  
   
   const size_t NUM_CENTRAL_MOMENTS = 7; //m11, m12, m20, m02, m30, m03 is enough for computing HU moments
   double moments[NUM_CENTRAL_MOMENTS];
         
-  if(onlyContours.cols %8 != 0)
+  if(contour.cols %8 != 0)
   {
       printf("Unable to perform openCL computations - image width must be a multiplication of 8!\n");
       return;
-  }      
-        
-    computeMomentsWithOpenCL(onlyContours, moments, NUM_CENTRAL_MOMENTS);
-     
-  //Results 
-    printf("Elapsed time in OpenCV: %f [ms]\n", time_spent);
-    printf("Moments in OpenCV\n");
-    printf("Moment M00\t%8.2f\n", im_mom.m00);
-    printf("Moment M01\t%8.2f\n", im_mom.m01);
-    printf("Moment M10\t%8.2f\n", im_mom.m10);
-    printf("Central Moment Mu02\t%8.2f\n", im_mom.mu02);
-    printf("Central Moment Mu03\t%8.2f\n", im_mom.mu03);
-    printf("Central Moment Mu11\t%8.2f\n", im_mom.mu11);
-    printf("Central Moment Mu12\t%8.2f\n", im_mom.mu12);
-    printf("Central Moment Mu20\t%8.2f\n", im_mom.mu20);
-    printf("Central Moment Mu21\t%8.2f\n", im_mom.mu21);
-    printf("Central Moment Mu30\t%8.2f\n", im_mom.mu30);
+  }     
+  
+    computeMomentsWithOpenCL(contour, moments, NUM_CENTRAL_MOMENTS);
+    
+     //Check the answers
+    
+   unsigned char* data_ptr = contour.data;
+   const int IMAGE_WIDTH = contour.cols;
+   const int IMAGE_HEIGHT = contour.rows;     
+   float data2d[IMAGE_HEIGHT][IMAGE_WIDTH], x_, y_;
 
-    printf("Normalized central moment n21 = %e\n", im_mom.nu21);
-    printf("Normalized central moment n03 = %e\n", im_mom.nu03);
-    printf("Normalized central moment n30 = %e\n", im_mom.nu30);
-    printf("Normalized central moment n12 = %e\n", im_mom.nu12);  
-     
-     
+   double m00 = 0, m01 = 0, m10 = 0, m11 = 0, m30 =0, m03 =0, m12 = 0, m21 = 0, m20 =0, m02 =0;
+   for(int i = 0; i < IMAGE_HEIGHT; i++)
+   {
+       for(int j = 0; j < IMAGE_WIDTH; j++)
+       {
+           data2d[i][j] = data_ptr[i * contour.step + j];
+           //moments
+           m00 += data2d[i][j];
+           m01 += (j+1) * data2d[i][j];
+           m10 += (i+1) * data2d[i][j];
+       }
+   }    
+   
+   x_ = m10 / m00;
+   y_ = m01 / m00;
+   
+   for(int i = 0; i < IMAGE_HEIGHT; i++)
+   {
+       for(int j = 0; j < IMAGE_WIDTH; j++)
+       {
+           float cx = 1 + i - x_;
+           float cy = 1 + j - y_;
+           //central moments
+           m20 += cy*cy*data2d[i][j];
+           m30 += cy*cy*cy*data2d[i][j];
+           m11 += cx*cy*data2d[i][j];
+           m21 += cx*cy*cy*data2d[i][j];
+           m02 += cx*cx*data2d[i][j];
+           m12 += cx*cx*cy*data2d[i][j];
+           m03 += cx*cx*cx*data2d[i][j];           
+       }
+   } 
+      //Results 
+    printf("Elapsed time in OpenCV: %f [ms]\n", time_spent);
+    
+    //printf("Moment M00\t%8.2f\n", im_mom.m00);
+    //printf("Moment M01\t%8.2f\n", im_mom.m01);
+    //printf("Moment M10\t%8.2f\n", im_mom.m10);
+
+
+    //printf("Center of mass: [%f, %f]\n", x_, y_);
+    //printf("Validiating the answers...\n");
+    printf("[Moment]\t\t[Pure C]\t[OpenCV]\t[OpenCL] \n");
+    printf("Moment M00\t\t%8e\t%8e\tN/A\n", m00, im_mom.m00);
+    printf("Moment M01\t\t%8e\t%8e\tN/A\n", m10, im_mom.m01); //ugly hack - m01 instead of m10, values are not used again so its ok
+    printf("Moment M10\t\t%8e\t%8e\tN/A\n", m01, im_mom.m10);   
+    printf("Central Moment Mu02\t%8e\t%8e\t%8e\n", m02, im_mom.mu02, moments[0]);
+    printf("Central Moment Mu03\t%8e\t%8e\t%8e\n", m03, im_mom.mu03, moments[1]);
+    printf("Central Moment Mu11\t%8e\t%8e\t%8e\n", m11, im_mom.mu11, moments[2]);
+    printf("Central Moment Mu12\t%8e\t%8e\t%8e\n", m12, im_mom.mu12, moments[3]);
+    printf("Central Moment Mu20\t%8e\t%8e\t%8e\n", m20, im_mom.mu20, moments[4]);
+    printf("Central Moment Mu21\t%8e\t%8e\t%8e\n", m21, im_mom.mu21, moments[5]);
+    printf("Central Moment Mu30\t%8e\t%8e\t%8e\n", m30, im_mom.mu30, moments[6]);
+
+    //printf("Computing normalized central moments...\n");
+    double n21 = m21 / powf(m00, 2.5),
+           n03 = m03 / powf(m00, 2.5),
+           n30 = m30 / powf(m00, 2.5),
+           n12 = m12 / powf(m00, 2.5);
+    
+    printf("Norm. centr. moment N21\tN/A \t\t%8e\t%8e\n", im_mom.nu21, n21);
+    printf("Norm. centr. moment N03\tN/A \t\t%8e\t%8e\n", im_mom.nu03, n03);
+    printf("Norm. centr. moment N30\tN/A \t\t%8e\t%8e\n", im_mom.nu30, n30);
+    printf("Norm. centr. moment N12\tN/A \t\t%8e\t%8e\n", im_mom.nu12, n12);
+
+
+    //instead of computing hu moments by hand we can fall back to OpenCV implementation again
+    Moments openClMoments;
+    openClMoments.m00 = m00; openClMoments.m01 = m10; openClMoments.m10 = m01;
+    
+    openClMoments.mu11 = m11; openClMoments.mu03 = m03; openClMoments.mu02 = m02; openClMoments.mu12 = m12;
+    openClMoments.mu21 = m21; openClMoments.mu20 = m20; openClMoments.mu30 = m30;
+    
+    //and so on, remember to check m10 and m01
+
+    double huOpenCl[7];
+    HuMoments(openClMoments, huOpenCl);
+    
+    
+    
+    printf("Computing Hu moments...\n");
+    float Hu7 = (3*n21-n03)*(n30+n12)*( (n30+n12) * (n30+n12) - 3 * (n21+n03)*(n21+n03) ) - 
+                 (n30-3*n12) * (n21+n03) * ( 3*(n30+n12)*(n30+n12) -(n21+n03)*(n21+n03) );
+    float Hu7Cv = (3*n21-n03)*(n12+n30)*(3* (n30+n12) * (n30+n12) - (n21+n03)*(n21+n03) ) - 
+                 (n30-3*n12) * (n21+n03) * ( 3*(n30+n12)*(n30+n12) -(n21+n03)*(n21+n03) );
+
+    printf("Hu7 = %e, Hu7CV_equation = %e Hu7 OpenCV based on opencl moments = %e\n", Hu7, Hu7Cv, huOpenCl[6]);   
+      
+  }
 }
 
 
@@ -305,9 +388,9 @@ void computeMomentsWithOpenCL(cv::Mat& frame, double* moments, const int NUM_CEN
 
   if(frame.isContinuous())
   {
-    printf("Wymiary: %dx%d\n", frame.rows, frame.cols);
-    //~ printf("Adres: %d\n", &frame); 
-    //~ std::cout << frame << std::endl;   
+    //printf("Wymiary: %dx%d\n", frame.rows, frame.cols);
+    //printf("Adres: %d\n", &frame); 
+    //std::cout << frame << std::endl;   
   }
    const int IMAGE_WIDTH = frame.cols;
    const int IMAGE_HEIGHT = frame.rows;     
@@ -344,14 +427,14 @@ void computeMomentsWithOpenCL(cv::Mat& frame, double* moments, const int NUM_CEN
    size_t GLOBAL_SIZE = (IMAGE_WIDTH * IMAGE_HEIGHT) / KERNEL_SIZE;    //total number of kernels
    size_t NUM_WORK_GROUPS = IMAGE_HEIGHT;
    const size_t NUM_MOMENTS = 4; //temporary buffer for MX0, MX1, MX2, MX3
-   printf("The following environment will be created:\n\
-           Image size: %dx%d\n\
-           Kernel size: %d\n\
-           Total number of kernels: %zu\n\
-           Number of work-groups: %zu\n\
-           Number of work-items in each group: %zu\n",
-           IMAGE_WIDTH, IMAGE_HEIGHT, KERNEL_SIZE, GLOBAL_SIZE, NUM_WORK_GROUPS, NUM_WORK_ITEMS);
-   
+   /*printf("The following environment will be created:\n\
+           //Image size: %dx%d\n\
+           //Kernel size: %d\n\
+           //Total number of kernels: %zu\n\
+           //Number of work-groups: %zu\n\
+           //Number of work-items in each group: %zu\n",
+           //IMAGE_WIDTH, IMAGE_HEIGHT, KERNEL_SIZE, GLOBAL_SIZE, NUM_WORK_GROUPS, NUM_WORK_ITEMS);
+   */
    /* Data and buffers */
    //calculate center of mass as x_ and y_
      
@@ -440,63 +523,6 @@ void computeMomentsWithOpenCL(cv::Mat& frame, double* moments, const int NUM_CEN
     
     //Results 
     printf("Elapsed time in OpenCL: %f [ms]\n", time_spent);
-
-    //Check the answers
-    
-
-   double m11 = 0, m30 =0, m03 =0, m12 = 0, m21 = 0, m20 =0, m02 =0;
-   for(int i = 0; i < IMAGE_HEIGHT; i++)
-   {
-       for(int j = 0; j < IMAGE_WIDTH; j++)
-       {
-           float cx = 1 + i - x_;
-           float cy = 1 + j - y_;
-           
-           m20 += cy*cy*data2d[i][j];
-           m30 += cy*cy*cy*data2d[i][j];
-           m11 += cx*cy*data2d[i][j];
-           m21 += cx*cy*cy*data2d[i][j];
-           m02 += cx*cx*data2d[i][j];
-           m12 += cx*cx*cy*data2d[i][j];
-           m03 += cx*cx*cx*data2d[i][j];           
-       }
-   }    
-   //ugly hack - m01 instead of m10, values are not used again so its ok
-    printf("Moments in OpenCL\n");
-    printf("Center of mass: [%f, %f]\n", x_, y_);
-    printf("Validiating the answers...\n");
-    printf("[Moment]\t\t[Pure C]\t[OpenCL] \n");
-    printf("Moment M00\t\t%8.2f\n", m00);
-    printf("Moment M01\t\t%8.2f\n", m10);
-    printf("Moment M10\t\t%8.2f\n", m01);   
-    printf("Central Moment M02\t%8.2f\t%8.2f\n", m02, moments[0]);
-    printf("Central Moment M03\t%8.2f\t%8.2f\n", m03, moments[1]);
-    printf("Central Moment M11\t%8.2f\t%8.2f\n", m11, moments[2]);
-    printf("Central Moment M12\t%8.2f\t%8.2f\n", m12, moments[3]);
-    printf("Central Moment M20\t%8.2f\t%8.2f\n", m20, moments[4]);
-    printf("Central Moment M21\t%8.2f\t%8.2f\n", m21, moments[5]);
-    printf("Central Moment M30\t%8.2f\t%8.2f\n", m30, moments[6]);
-
-    printf("Computing normalized central moments...\n");
-    double n21 = m21 / powf(m00, 2.5),
-           n03 = m03 / powf(m00, 2.5),
-           n30 = m30 / powf(m00, 2.5),
-           n12 = m12 / powf(m00, 2.5);
-    
-    printf("Normalized central moment n21 = %e\n", n21);
-    printf("Normalized central moment n03 = %e\n", n03);
-    printf("Normalized central moment n30 = %e\n", n30);
-    printf("Normalized central moment n12 = %e\n", n12);
-
-
-    printf("Computing Hu moments...\n");
-    float Hu7 = (3*n21-n03)*(n30+n12)*( (n30+n12) * (n30+n12) - 3 * (n21+n03)*(n21+n03) ) - 
-                 (n30-3*n12) * (n21+n03) * ( 3*(n30+n12)*(n30+n12) -(n21+n03)*(n21+n03) );
-    float Hu7Cv = (3*n21-n03)*(n12+n30)*(3* (n30+n12) * (n30+n12) - (n21+n03)*(n21+n03) ) - 
-                 (n30-3*n12) * (n21+n03) * ( 3*(n30+n12)*(n30+n12) -(n21+n03)*(n21+n03) );
-
-    printf("Hu7 = %e, Hu7CV = %e\n", Hu7, Hu7Cv);
-
 
    /* Deallocate resources */
    clReleaseKernel(kernel);
