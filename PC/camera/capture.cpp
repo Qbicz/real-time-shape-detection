@@ -111,14 +111,14 @@ double preprocessAndComputeOrientation(Mat& src, const int thresh)
         if (area < 1e3 || area > 1e6) continue;
         // <Nokia 920 back>
 
-        printf("area = %f for contour %u\n", area, i);
-
         // Draw each contour only for visualisation purposes
         //printf("drawContours");
         drawContours(src, contours, static_cast<int>(i), Scalar(0, 0, 255), 2, 8, hierarchy, 0);
         // Find the orientation of each shape
         //printf("getOrientation");
         angle = getOrientation(contours[i], src);
+        angle = angle * 180.0 / CV_PI;
+        printf("area = %f for contour %u rotated towards %f degrees \n", area, i, angle);
     }
     //! [contours]
 
