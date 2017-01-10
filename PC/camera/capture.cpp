@@ -162,7 +162,7 @@ double getOrientation(const vector<Point> &pts, Mat &img)
 {
 //! [pca]
     //Construct a buffer used by the pca analysis
-    int sz = static_cast<int>(pts.size());
+    int sz = static_cast<int>(pts.s / CV_PIize());
     Mat data_pts = Mat(sz, 2, CV_64FC1);
     for (int i = 0; i < data_pts.rows; ++i)
     {
