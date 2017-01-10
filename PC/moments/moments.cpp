@@ -239,13 +239,15 @@ void thresh_callback(int, void* )
            nu02 = m02 / powf(m00, 2),
            nu11 = m11 / powf(m00, 2);
     
-    printf("Norm. centr. moment N21\tN/A \t\t%8e\t%8e\n", im_mom.nu21, nu21);
-    printf("Norm. centr. moment N03\tN/A \t\t%8e\t%8e\n", im_mom.nu03, nu03);
-    printf("Norm. centr. moment N30\tN/A \t\t%8e\t%8e\n", im_mom.nu30, nu30);
-    printf("Norm. centr. moment N12\tN/A \t\t%8e\t%8e\n", im_mom.nu12, nu12);
-    printf("Norm. centr. moment N20\tN/A \t\t%8e\t%8e\n", im_mom.nu20, nu20);
-    printf("Norm. centr. moment N02\tN/A \t\t%8e\t%8e\n", im_mom.nu02, nu02);
+    
     printf("Norm. centr. moment N11\tN/A \t\t%8e\t%8e\n", im_mom.nu11, nu11);
+    printf("Norm. centr. moment N20\tN/A \t\t%8e\t%8e\n", im_mom.nu20, nu20);
+    printf("Norm. centr. moment N30\tN/A \t\t%8e\t%8e\n", im_mom.nu30, nu30);
+    printf("Norm. centr. moment N21\tN/A \t\t%8e\t%8e\n", im_mom.nu21, nu21);
+    
+    printf("Norm. centr. moment N03\tN/A \t\t%8e\t%8e\n", im_mom.nu03, nu03);
+    printf("Norm. centr. moment N12\tN/A \t\t%8e\t%8e\n", im_mom.nu12, nu12);
+    printf("Norm. centr. moment N02\tN/A \t\t%8e\t%8e\n", im_mom.nu02, nu02);
 
     //instead of computing hu moments by hand we can fall back to OpenCV implementation again
     Moments openClMoments;
@@ -270,8 +272,8 @@ void thresh_callback(int, void* )
     printf("Hu invariant Hu6\tN/A \t\t%8e\t%8e\n", huMoments[i][5], huOpenCl[5]);
     printf("Hu invariant Hu7\tN/A \t\t%8e\t%8e\n", huMoments[i][6], huOpenCl[6]);
   
-    printf("Elapsed time in OpenCV: %f [ms]\n", timeSpentInOpenCV);
-    printf("Elapsed time in OpenCL: %f [ms]\n", timeSpentInOpenCL);
+    printf("Elapsed time in OpenCV: \n%f [ms]\n", timeSpentInOpenCV);
+    printf("Elapsed time in OpenCL: \n%f [ms]\n", timeSpentInOpenCL);
 
   }
 }

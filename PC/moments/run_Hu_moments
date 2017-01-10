@@ -1,1 +1,1 @@
-make && ./moments ../img/mirrorok.png
+make && ./moments ../img/test_mirror/test1.png
