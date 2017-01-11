@@ -48,6 +48,7 @@ void drawAxis(Mat& img, Point p, Point q, Scalar colour, const float scale = 0.2
  */
 double getOrientation(const vector<Point> &pts, Mat &img)
 {
+
 //! [pca]
     //Construct a buffer used by the pca analysis
     int sz = static_cast<int>(pts.size());
@@ -79,12 +80,13 @@ double getOrientation(const vector<Point> &pts, Mat &img)
 //! [pca]
 //! [visualization]
     // Draw the principal components
+    /*
     circle(img, cntr, 3, Scalar(255, 0, 255), 2);
     Point p1 = cntr + 0.02 * Point(static_cast<int>(eigen_vecs[0].x * eigen_val[0]), static_cast<int>(eigen_vecs[0].y * eigen_val[0]));
     Point p2 = cntr - 0.02 * Point(static_cast<int>(eigen_vecs[1].x * eigen_val[1]), static_cast<int>(eigen_vecs[1].y * eigen_val[1]));
     drawAxis(img, cntr, p1, Scalar(0, 255, 0), 1);
     drawAxis(img, cntr, p2, Scalar(255, 255, 0), 5);
-
+    */
     double angle = atan2(eigen_vecs[0].y, eigen_vecs[0].x); // orientation in radians
 //! [visualization]
 
@@ -108,7 +110,10 @@ int main(int, char** argv)
         return EXIT_FAILURE;
     }
 
-    imshow("src", src);
+    //imshow("src", src);
+
+    // Measure time of PCA op
+    int64 t0 = cv::getTickCount();
 
     // Convert image to grayscale
     Mat gray;
@@ -133,13 +138,18 @@ int main(int, char** argv)
         if (area < 1e2 || 1e5 < area) continue;
 
         // Draw each contour only for visualisation purposes
-        drawContours(src, contours, static_cast<int>(i), Scalar(0, 0, 255), 2, 8, hierarchy, 0);
+        //drawContours(src, contours, static_cast<int>(i), Scalar(0, 0, 255), 2, 8, hierarchy, 0);
         // Find the orientation of each shape
         getOrientation(contours[i], src);
     }
 //! [contours]
 
-    imshow("output", src);
+    // Measure time of PCA
+    int64 t1 = cv::getTickCount();
+    double millisecs = 1000*(t1-t0)/cv::getTickFrequency();
+    cout << millisecs << " [ms], " << t1-t0 << " ticks." << endl;
+
+    //imshow("output", src);
 
     waitKey(0);
     return 0;
