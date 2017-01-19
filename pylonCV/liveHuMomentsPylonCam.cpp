@@ -28,6 +28,7 @@ static const uint32_t c_countOfImagesToGrab = 400; // test fps
 double preprocessAndComputeOrientation(Mat& src, const int thresh = 100);
 void drawAxis(Mat&, Point, Point, Scalar, const float);
 double getOrientation(const vector<Point> &, Mat&);
+int setCameraParams(INodeMap& nodemap, int64_t newWidth, int64_t newHeight);
 
 int main(int argc, char* argv[])
 {
@@ -49,7 +50,13 @@ int main(int argc, char* argv[])
         // Print the model name of the camera.
         cout << "Using device " << camera.GetDeviceInfo().GetModelName() << endl;
 
-        // TODO: ustawic niska rozdzielczosc zdjecia akwizycji
+
+        INodeMap& nodemap = camera.GetNodeMap();
+        // Open the camera for accessing the parameters.
+        camera.Open();
+        // set acquisition resolution and offsets
+        if( setCameraParams(nodemap, 640, 480) )
+            cout << "CAMERA PARAMS NOT SET";
 
         // The parameter MaxNumBuffer can be used to control the count of buffers
         // allocated for grabbing. The default value of this parameter is 10.
@@ -273,3 +280,40 @@ double getOrientation(const vector<Point> &pts, Mat &img)
     return angle;
 }
 
+int setCameraParams(INodeMap& nodemap, int64_t newWidth, int64_t newHeight)
+{
+
+    // Get the integer nodes describing the AOI.
+    CIntegerPtr offsetX( nodemap.GetNode( "OffsetX"));
+    CIntegerPtr offsetY( nodemap.GetNode( "OffsetY"));
+    CIntegerPtr width( nodemap.GetNode( "Width"));
+    CIntegerPtr height( nodemap.GetNode( "Height"));
+
+    // On some cameras the offsets are read-only,
+    // so we check whether we can write a value. Otherwise, we would get an exception.
+    // GenApi has some convenience predicates to check this easily.
+    if ( IsWritable( offsetX))
+    {
+        offsetX->SetValue( offsetX->GetMin());
+    }
+    if ( IsWritable( offsetY))
+    {
+        offsetY->SetValue( offsetY->GetMin());
+    }
+
+    //TODO: Some properties have restrictions. Use GetInc/GetMin/GetMax to make sure you set a valid value.
+    width->SetValue(newWidth);
+    height->SetValue(newHeight);
+
+    cout << "OffsetX          : " << offsetX->GetValue() << endl;
+    cout << "OffsetY          : " << offsetY->GetValue() << endl;
+
+    cout << "Width            : " << width->GetValue() << endl;
+    cout << "Height           : " << height->GetValue() << endl;
+
+    // Test is the value is set correctly
+    if (width->GetValue() == newWidth && height->GetValue() == newHeight)
+        return 0;
+    else
+        return 1;
+}

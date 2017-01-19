@@ -42,7 +42,6 @@ static const uint32_t c_countOfImagesToGrab = 1000;
 
 int main(int argc, char* argv[])
 {
-    // The exit code of the sample application.
     int exitCode = 0;
 
     // Automagically call PylonInitialize and PylonTerminate to ensure the pylon runtime system
@@ -85,16 +84,14 @@ int main(int argc, char* argv[])
         // Create an OpenCV image
         Mat openCvImage;
         
-        // define video name
-        string videoFileName = "OpenCvVideo.avi";
-        
         cout << "// define the video frame size.\n";
         //cv::Size frameSize = Size((int)width->GetValue(), (int)height->GetValue());
         cv::Size frameSize = Size(640, 480);
         //cout << "Video frame size: " << (int)width->GetValue() << ", " << (int)height->GetValue() << endl;
         
         cout << "// set the codec and frame rate\n";
-        cvVideoCreator.open(videoFileName, CV_FOURCC('D', 'I', 'V', 'X'), 20, frameSize, true);
+        if(recordVideo)
+        	cvVideoCreator.open("NutsVideo.avi", CV_FOURCC('D', 'I', 'V', 'X'), 20, frameSize, true);
         
         cout << "// Start the grabbing of c_countOfImagesToGrab images.\n";
         // The camera device is parameterized with a default configuration which
