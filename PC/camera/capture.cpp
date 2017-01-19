@@ -14,13 +14,20 @@ double getOrientation(const vector<Point> &, Mat&);
 
 int main(int, char**)
 {
+    printf("main starting\n");
     VideoCapture cap(0); // open the default camera
     if(!cap.isOpened())  // check if we succeeded
     {
-	printf("camera 0 not found!\n");
-	return -1;
+	    printf("camera 0 not found!\n");
+	    return -1;
     }
     printf("Camera opened!");
+    
+#if 0
+    double fps = cap.get(CV_CAP_PROP_FPS);
+    printf("FPS = %f\n", fps);    
+#endif
+
     Mat gray;
     Mat src;
     namedWindow("edges",1);
