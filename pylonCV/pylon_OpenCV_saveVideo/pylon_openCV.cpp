@@ -35,7 +35,7 @@ using namespace std;
 
 // Define if images and videos are to be saved.
 #define saveImages  1
-#define recordVideo 1
+#define recordVideo 0
 
 // Number of images to be grabbed.
 static const uint32_t c_countOfImagesToGrab = 1000;
@@ -65,7 +65,7 @@ int main(int argc, char* argv[])
 
         // The parameter MaxNumBuffer can be used to control the count of buffers
         // allocated for grabbing. The default value of this parameter is 10.
-        camera.MaxNumBuffer = 20;
+        camera.MaxNumBuffer = 5;
 
         // create pylon image format converter and pylon image
         CImageFormatConverter formatConverter;
@@ -73,14 +73,14 @@ int main(int argc, char* argv[])
         CPylonImage pylonImage;
         int grabbedImages = 0;
 
-        // Get camera nodemap to access parameters
+        cout << "// Get camera nodemap to access parameters\n";
         INodeMap& nodemap = camera.GetNodeMap();
         
-        // Create pointers to access the camera Width and Height
+        cout << "// Create pointers to access the camera Width and Height\n";
         CIntegerPtr width = nodemap.GetNode("Width");
         CIntegerPtr height = nodemap.GetNode("Height");
         
-        // Create an OpenCV video creator
+        cout << "// Create an OpenCV video creator\n";
         VideoWriter cvVideoCreator;
         // Create an OpenCV image
         Mat openCvImage;
@@ -88,14 +88,15 @@ int main(int argc, char* argv[])
         // define video name
         string videoFileName = "OpenCvVideo.avi";
         
-        // define the video frame size.
-        cv::Size frameSize = Size((int)width->GetValue(), (int)height->GetValue());
-        cout << "Video frame size: " << (int)width->GetValue() << ", " << (int)height->GetValue() << endl;
+        cout << "// define the video frame size.\n";
+        //cv::Size frameSize = Size((int)width->GetValue(), (int)height->GetValue());
+        cv::Size frameSize = Size(640, 480);
+        //cout << "Video frame size: " << (int)width->GetValue() << ", " << (int)height->GetValue() << endl;
         
-        // set the codec and frame rate
-        cvVideoCreator.open(videoFileName, CV_FOURCC('D', 'I', 'V', 'X'), 60, frameSize, true);
+        cout << "// set the codec and frame rate\n";
+        cvVideoCreator.open(videoFileName, CV_FOURCC('D', 'I', 'V', 'X'), 20, frameSize, true);
         
-        // Start the grabbing of c_countOfImagesToGrab images.
+        cout << "// Start the grabbing of c_countOfImagesToGrab images.\n";
         // The camera device is parameterized with a default configuration which
         // sets up free-running continuous acquisition.
         camera.StartGrabbing( c_countOfImagesToGrab, GrabStrategy_LatestImageOnly);
@@ -105,7 +106,7 @@ int main(int argc, char* argv[])
 
         
         // Camera.StopGrabbing() is called automatically by the RetrieveResult() method
-        // when c_countOfImagesToGrab images have been retrieved.
+        cout << "// when c_countOfImagesToGrab images have been retrieved.\n";
         while ( camera.IsGrabbing())
         {
             // Wait for an image and then retrieve it. A timeout of 5000 ms is used.
@@ -115,8 +116,8 @@ int main(int argc, char* argv[])
             if (ptrGrabResult->GrabSucceeded())
             {
                 // Access the image data.
-                // cout << "SizeX: " << ptrGrabResult->GetWidth() << endl;
-                // cout << "SizeY: " << ptrGrabResult->GetHeight() << endl;
+                cout << "SizeX: " << ptrGrabResult->GetWidth() << endl;
+                cout << "SizeY: " << ptrGrabResult->GetHeight() << endl;
                 const uint8_t *pImageBuffer = (uint8_t *) ptrGrabResult->GetBuffer();
                 // cout << "Gray value of first pixel: " << (uint32_t) pImageBuffer[0] << endl << endl;
 		
@@ -160,8 +161,7 @@ int main(int argc, char* argv[])
     catch (GenICam::GenericException &e)
     {
         // Error handling.
-        cerr << "An exception occurred." << endl
-        << e.GetDescription() << endl;
+        cerr << "An exception occurred." << endl << e.GetDescription() << endl;
         exitCode = 1;
     }
 

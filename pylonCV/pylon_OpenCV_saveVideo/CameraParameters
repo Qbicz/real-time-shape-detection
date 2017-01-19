@@ -1,0 +1,20 @@
+GetDeviceDiscoveryInfo: bFunctionClass = 14, bFunctionSubClass = 3, bFunctionProtocol = 0. Device is not an U3V device.
+GetDeviceDiscoveryInfo: bFunctionClass = 14, bFunctionSubClass = 3, bFunctionProtocol = 0. Device is not an U3V device.
+Camera Device Information
+=========================
+Vendor           : Basler
+Model            : acA2000-165umNIR
+Firmware version : 106554-22;U;acA2000_165u;V1.1-3;0
+
+Camera Device Settings
+======================
+OffsetX          : 0
+OffsetY          : 0
+Width            : 640
+Height           : 480
+Old PixelFormat  : Mono8
+New PixelFormat  : Mono8
+Gain (50%)       : 11.5447 (Min: 0; Max: 23.0593)
+
+Press Enter to exit.
+

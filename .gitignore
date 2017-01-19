@@ -37,3 +37,7 @@
 *~
 
 mali_drivers
+# images and movies
+*.avi
+*.jpg
+

@@ -161,7 +161,7 @@ double preprocessAndComputeOrientation(Mat& src, const int thresh)
         // Calculate the area of each contour
         double area = contourArea(contours[i]);
         // Ignore contours that are too small or too large
-        if (area < 1e2 || area > 1e6) continue;
+        if (area < 3e4 || area > 1e6) continue;
         // <Nokia 920 back>
 
         printf("area = %f for contour %u\n", area, i);
