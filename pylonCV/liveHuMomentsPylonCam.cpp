@@ -42,14 +42,11 @@ int main(int argc, char* argv[])
     try
     {
         // Create an instant camera object with the camera device found first.
-        // CDeviceInfo info;
-        // info.SetSerialNumber("21694497");
         cout << "Creating Camera..." << endl;
         CInstantCamera camera( CTlFactory::GetInstance().CreateFirstDevice());
         cout << "Camera Created." << endl;
         // Print the model name of the camera.
         cout << "Using device " << camera.GetDeviceInfo().GetModelName() << endl;
-
 
         INodeMap& nodemap = camera.GetNodeMap();
         // Open the camera for accessing the parameters.
