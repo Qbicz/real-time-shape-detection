@@ -22,7 +22,7 @@ using namespace cv;
 using namespace std;
 
 // Number of images to be grabbed.
-static const uint32_t c_countOfImagesToGrab = 10000;
+static const uint32_t c_countOfImagesToGrab = 400; // test fps
 
 // Function declarations - TODO: move to file which will be #included
 double preprocessAndComputeOrientation(Mat& src, const int thresh = 100);
@@ -71,6 +71,12 @@ int main(int argc, char* argv[])
         // This smart pointer will receive the grab result data.
         CGrabResultPtr ptrGrabResult;
 
+        // --- Benchmark FPS rate of Camera + algorithm chain ---
+        // Start and end times
+        time_t start, end;
+        // Start time
+        time(&start);
+    
         // Camera.StopGrabbing() is called automatically by the RetrieveResult() method
         // when c_countOfImagesToGrab images have been retrieved.
         while ( camera.IsGrabbing())
@@ -116,6 +122,19 @@ int main(int argc, char* argv[])
                 //cout << "Error: " << ptrGrabResult->GetErrorCode() << " " << ptrGrabResult->GetErrorDescription() << endl;
             }
         }
+
+        // --- FPS benchmark ---
+        // End Time
+        time(&end);
+
+        // Time elapsed
+        double seconds = difftime (end, start);
+        cout << "Time taken : " << seconds << " seconds" << endl;
+         
+        // Calculate frames per second
+        double fps  = c_countOfImagesToGrab / seconds;
+        cout << "Estimated frames per second : " << fps << endl;
+        // --- End FPS Benchmark ---
     }
     catch (GenICam::GenericException &e)
     {
