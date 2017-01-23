@@ -1,0 +1,11 @@
+echo "Run tests of PCA"
+FILES=../img/test/*
+
+for f in $FILES
+do
+    echo "$f" >> pca_time.log
+    ./pca $f >> pca_time.log
+done
+
+echo "Done"
+# ../img/seed.jpg 

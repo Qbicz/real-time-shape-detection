@@ -120,7 +120,7 @@ double preprocessAndComputeOrientation(Mat& src, const int thresh)
 
         // Draw each contour only for visualisation purposes
         //printf("drawContours");
-        drawContours(src, contours, static_cast<int>(i), Scalar(0, 0, 255), 2, 8, hierarchy, 0);
+        drawContours(src, contours, static_cast<int>(i), Scalar(0, 0, 255), -1, 8, hierarchy, 0);
         // Find the orientation of each shape
         //printf("getOrientation");
         angle = getOrientation(contours[i], src);
