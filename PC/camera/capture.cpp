@@ -30,7 +30,7 @@ int main(int, char**)
 
     Mat gray;
     Mat src;
-    namedWindow("edges",1);
+
     for(;;)
     {
         cap >> src; // get a new frame from camera
@@ -109,6 +109,9 @@ double preprocessAndComputeOrientation(Mat& src, const int thresh)
     vector<vector<Point> > contours;
     findContours(bw, contours, hierarchy, CV_RETR_LIST, CV_CHAIN_APPROX_NONE);
 
+    Rect boundingBox;
+    Mat roi;
+
     for (size_t i = 0; i < contours.size(); ++i)
     //for (size_t i = 0; i < 5; ++i)
     {
@@ -116,7 +119,16 @@ double preprocessAndComputeOrientation(Mat& src, const int thresh)
         double area = contourArea(contours[i]);
         // Ignore contours that are too small or too large
         if (area < 1e3 || area > 1e6) continue;
-        // <Nokia 920 back>
+        
+        // Find Region of interest
+        boundingBox = boundingRect(contours[i]);
+        roi = bw(boundingBox);
+
+        // Draw a box
+        rectangle(src, boundingBox, Scalar(0, 255, 255), 2);
+
+    	// Show ROI
+    	imshow("ROI", roi);
 
         // Draw each contour only for visualisation purposes
         //printf("drawContours");
@@ -128,6 +140,7 @@ double preprocessAndComputeOrientation(Mat& src, const int thresh)
         printf("area = %f for contour %u rotated towards %f degrees \n", area, i, angle);
     }
     //! [contours]
+
 
     return angle;
 }
