@@ -70,9 +70,13 @@ void computeMomentsUsingOpenCvAndOpenCL(int, void* )
 
     // Detect edges using canny
     Canny( src_gray, canny_output, thresh, thresh*2, 3 );
+    
     // Find contours
     findContours( canny_output, contours, hierarchy, RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, Point(0, 0) );
-
+    clock_t end = clock();
+    double timeSpentFindingContours = 1000 * ((double)(end - begin) / CLOCKS_PER_SEC);
+    
+    begin = clock(); 
     // Leave only contours with appropriate length
     const int contour_thresh = 200;
     const bool closed = false;
@@ -135,8 +139,7 @@ void computeMomentsUsingOpenCvAndOpenCL(int, void* )
     /*
     *  TODO: add PCA and draw orientation: major PCA direction multiplied by 7th Hu moment
     */ 
-    clock_t end = clock();
-    double timeSpentInOpenCV = 1000 * ((double)(end - begin) / CLOCKS_PER_SEC);
+    
 
     /// Show in a window
     imshow( "Contours", drawing );
@@ -150,6 +153,9 @@ void computeMomentsUsingOpenCvAndOpenCL(int, void* )
        drawContours( drawing, contours, i, color, 2, 8, hierarchy, 0, Point() );
        circle( drawing, mc[i], 4, color, -1, 8, 0 );
      }    
+    
+    end = clock();
+    double timeSpentInOpenCV = 1000 * ((double)(end - begin) / CLOCKS_PER_SEC);
     
     printf("Compute moments in OpenCL and compare them to other results...\n");   
     for(size_t i = 0; i < contours.size(); i++)
@@ -167,7 +173,6 @@ void computeMomentsUsingOpenCvAndOpenCL(int, void* )
     vector<vector<Point> > contours_poly( contours.size() );
     vector<Rect> boundRect( contours.size() );
     vector<Point2f>center( contours.size() );
-    vector<float>radius( contours.size() );
 
     for( size_t i = 0; i < contours.size(); i++ )
     { 
@@ -197,16 +202,14 @@ void computeMomentsUsingOpenCvAndOpenCL(int, void* )
 
     const size_t NUM_CENTRAL_MOMENTS = 7; //m11, m12, m20, m02, m30, m03 is enough for computing HU moments
     double moments[NUM_CENTRAL_MOMENTS];
-        
-   
 
     double timeSpentInOpenCL = computeMomentsWithOpenCL(roi, moments, NUM_CENTRAL_MOMENTS);
 
      //Check the answers
 
-    unsigned char* data_ptr = contour.data;
-    const int IMAGE_WIDTH = contour.cols;
-    const int IMAGE_HEIGHT = contour.rows;     
+    unsigned char* data_ptr = roi.data;
+    const int IMAGE_WIDTH = roi.cols;
+    const int IMAGE_HEIGHT = roi.rows;     
     float data2d[IMAGE_HEIGHT][IMAGE_WIDTH], x_, y_;
 
     double m00 = 0, m01 = 0, m10 = 0, m11 = 0, m30 =0, m03 =0, m12 = 0, m21 = 0, m20 =0, m02 =0;
@@ -214,7 +217,7 @@ void computeMomentsUsingOpenCvAndOpenCL(int, void* )
     {
        for(int j = 0; j < IMAGE_WIDTH; j++)
        {
-           data2d[i][j] = data_ptr[i * contour.step + j];
+           data2d[i][j] = data_ptr[i * roi.step + j];
            //moments
            m00 += data2d[i][j];
            m01 += (j+1) * data2d[i][j];
@@ -297,6 +300,7 @@ void computeMomentsUsingOpenCvAndOpenCL(int, void* )
     printf("Hu invariant Hu6\tN/A \t\t%8e\t%8e\n", huMoments[i][5], huOpenCl[5]);
     printf("Hu invariant Hu7\tN/A \t\t%8e\t%8e\n", huMoments[i][6], huOpenCl[6]);
 
+    printf("Time spent finding contours:\n%f [ms]\n", timeSpentFindingContours);
     printf("Elapsed time in OpenCV: \n%f [ms]\n", timeSpentInOpenCV);
     printf("Elapsed time in OpenCL: \n%f [ms]\n", timeSpentInOpenCL);
 
