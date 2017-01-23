@@ -48,12 +48,12 @@ int main( int argc, char** argv )
     blur( src_gray, src_gray, Size(3,3) );
 
     // Create Window for source image
-    //const char* source_window = "Source";
-    //namedWindow( source_window, CV_WINDOW_AUTOSIZE );
-    //imshow( source_window, src );
+    const char* source_window = "Source";
+    namedWindow( source_window, CV_WINDOW_AUTOSIZE );
+    imshow( source_window, src );
 
     //uncomment this to show trackbar to adjust 
-    //createTrackbar( " Canny thresh:", "Source", &computeMomentsUsingOpenCvAndOpenCL, max_thresh, thresh_callback );
+    createTrackbar( " Canny thresh:", "Source", &thresh, max_thresh, computeMomentsUsingOpenCvAndOpenCL );
     computeMomentsUsingOpenCvAndOpenCL( 0, 0 );
 
     waitKey(0);
@@ -178,18 +178,29 @@ void computeMomentsUsingOpenCvAndOpenCL(int, void* )
         roi = contour(roiPosition);
     }
 
+    int numOfColumnsNeeded = 0;
+    if(roi.cols % 8 != 0)
+    {
+        numOfColumnsNeeded = 8 - (roi.cols % 8);
+        printf("Unable to perform openCL computations - image width must be a multiplication of 8 and needs additional %d columns!\n", numOfColumnsNeeded);
+        
+        Mat pad = Mat::zeros(roi.rows, numOfColumnsNeeded, CV_8UC1);
+    
+        //printf("ROI size: %d x %d\n", roi.cols, roi.rows);
+        //printf("Pad size: %d x %d\n", pad.cols, pad.rows);
+
+        //add to ROI
+        hconcat(roi, pad, roi);
+    }  
+
     imshow( "ROI", roi );
 
     const size_t NUM_CENTRAL_MOMENTS = 7; //m11, m12, m20, m02, m30, m03 is enough for computing HU moments
     double moments[NUM_CENTRAL_MOMENTS];
         
-    if(contour.cols %8 != 0)
-    {
-      printf("Unable to perform openCL computations - image width must be a multiplication of 8!\n");
-      return;
-    }     
+   
 
-    double timeSpentInOpenCL = computeMomentsWithOpenCL(contour, moments, NUM_CENTRAL_MOMENTS);
+    double timeSpentInOpenCL = computeMomentsWithOpenCL(roi, moments, NUM_CENTRAL_MOMENTS);
 
      //Check the answers
 
@@ -233,9 +244,9 @@ void computeMomentsUsingOpenCvAndOpenCL(int, void* )
       //Results  
       //printf("Validiating the answers...\n");
     printf("[Moment]\t\t[Pure C]\t[OpenCV]\t[OpenCL] \n");
-    printf("Moment M00\t\t%8e\t%8e\tN/A\n", m00, im_mom.m00);
-    printf("Moment M01\t\t%8e\t%8e\tN/A\n", m10, im_mom.m01); //ugly hack - m01 instead of m10, values are not used again so its ok
-    printf("Moment M10\t\t%8e\t%8e\tN/A\n", m01, im_mom.m10);   
+    printf("Moment M00\t\t%8e\t%8e\tN/A\n",        m00, im_mom.m00);
+    printf("Moment M01\t\t%8e\t%8e\tN/A\n",        m10, im_mom.m01); //ugly hack - m01 instead of m10, values are not used again so its ok
+    printf("Moment M10\t\t%8e\t%8e\tN/A\n",        m01, im_mom.m10);   
     printf("Central Moment Mu02\t%8e\t%8e\t%8e\n", m02, im_mom.mu02, moments[0]);
     printf("Central Moment Mu03\t%8e\t%8e\t%8e\n", m03, im_mom.mu03, moments[1]);
     printf("Central Moment Mu11\t%8e\t%8e\t%8e\n", m11, im_mom.mu11, moments[2]);
