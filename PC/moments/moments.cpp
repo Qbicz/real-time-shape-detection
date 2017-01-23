@@ -139,10 +139,7 @@ void computeMomentsUsingOpenCvAndOpenCL(int, void* )
     double timeSpentInOpenCV = 1000 * ((double)(end - begin) / CLOCKS_PER_SEC);
 
     /// Show in a window
-    namedWindow( "Contours", CV_WINDOW_AUTOSIZE );
     imshow( "Contours", drawing );
-    
-    namedWindow( "Shapes", CV_WINDOW_AUTOSIZE );
 
     /// Calculate the area with the moments 00 and compare with the result of the OpenCV function
     //printf("\t Info: Area and Contour Length \n");
@@ -163,10 +160,23 @@ void computeMomentsUsingOpenCvAndOpenCL(int, void* )
     drawContours( contour, contours, i, white, -1, 8, hierarchy, 0, Point() ); //to fill the contour use negative value (-1) for thickness (now 2)
     Moments im_mom = moments(contour, false);
 
+
+    //get Region of Interest based on previously found contour
     Mat roi = Mat::zeros(contour.size(), CV_8UC1);
 
+    vector<vector<Point> > contours_poly( contours.size() );
+    vector<Rect> boundRect( contours.size() );
+    vector<Point2f>center( contours.size() );
+    vector<float>radius( contours.size() );
 
+    for( size_t i = 0; i < contours.size(); i++ )
+    { 
+        approxPolyDP( Mat(contours[i]), contours_poly[i], 3, true );
+        boundRect[i] = boundingRect( Mat(contours_poly[i]) );
 
+        Rect roiPosition(boundRect[i].tl(), boundRect[i].br());
+        roi = contour(roiPosition);
+    }
 
     imshow( "ROI", roi );
 
