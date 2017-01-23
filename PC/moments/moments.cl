@@ -1,4 +1,4 @@
-__kernel void moments(__global float8* data, 
+__kernel void moments(__global uchar8* data, 
                       __global float* group_result, 
                       int NUM_WORK_ITEMS, 
                       __local float* local_result, 
@@ -12,7 +12,7 @@ __kernel void moments(__global float8* data,
     const int initial_col = get_local_id(0) * KERNEL_SIZE;
     //by 'moment' we mean central moment
     const int data_offset = get_global_id(0);
-    float8 input_data = data[data_offset];
+    uchar8 input_data = data[data_offset];
     
     //compute central moment MX0 in row
     float momentX0 = input_data.s0 + 

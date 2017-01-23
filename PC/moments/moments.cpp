@@ -1,28 +1,16 @@
 #include "opencv2/highgui/highgui.hpp"
 #include "opencv2/imgproc/imgproc.hpp"
-#include <iostream>
-#include <stdio.h>
-#include <stdlib.h>
+#include <cstdio>
+#include <cstdlib>
+#include <cmath>
+#include <cstring>
+#include <ctime>
+#include <CL/cl.h>
 
 #define PROGRAM_FILE "moments.cl"
 #define KERNEL_FUNC "moments"
 
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <time.h>
-
-#ifdef MAC
-#include <OpenCL/cl.h>
-#else
-#include <CL/cl.h>
-#endif
-
-
-
 using namespace cv;
-using namespace std;
 
 Mat src; Mat src_gray;
 int thresh = 150;
@@ -31,7 +19,7 @@ const float scale = 4e9;
 RNG rng(12345);
 
 /// Function header
-void thresh_callback(int, void* );
+void computeMomentsUsingOpenCvAndOpenCL(int, void* );
 void drawAxis(Mat& img, Point p, Point q, Scalar colour, const float scale);
 cl_device_id create_device();
 cl_program build_program(cl_context ctx, cl_device_id dev, const char* filename);
@@ -41,65 +29,73 @@ double computeMomentsWithOpenCL(cv::Mat& frame, double* moments, const int NUM_C
 /** @function main */
 int main( int argc, char** argv )
 {
-  // TODO: check for argc < 2
+    if(argc < 2)
+    {
+      printf("Usage: ./moments input_png [init_canny_threshold]\n");
+      exit(1);
+    }
 
-  /// Load source image and convert it to gray
-  src = imread( argv[1], 1 );
+    if(argc == 3)
+    {
+      thresh = atoi(argv[2]);
+    }
 
-  /// Convert image to gray and blur it
-  cvtColor( src, src_gray, CV_BGR2GRAY );
-  blur( src_gray, src_gray, Size(3,3) );
+    /// Load source image and convert it to gray
+    src = imread( argv[1], 1 );
 
-  /// Create Window
-  const char* source_window = "Source";
-  namedWindow( source_window, CV_WINDOW_AUTOSIZE );
-  imshow( source_window, src );
+    /// Convert image to gray and blur it
+    cvtColor( src, src_gray, CV_BGR2GRAY );
+    blur( src_gray, src_gray, Size(3,3) );
 
-  createTrackbar( " Canny thresh:", "Source", &thresh, max_thresh, thresh_callback );
-  thresh_callback( 0, 0 );
+    // Create Window for source image
+    //const char* source_window = "Source";
+    //namedWindow( source_window, CV_WINDOW_AUTOSIZE );
+    //imshow( source_window, src );
 
-  waitKey(0);
-  return(0);
+    //uncomment this to show trackbar to adjust 
+    //createTrackbar( " Canny thresh:", "Source", &computeMomentsUsingOpenCvAndOpenCL, max_thresh, thresh_callback );
+    computeMomentsUsingOpenCvAndOpenCL( 0, 0 );
+
+    waitKey(0);
+    return(0);
 }
 
-/** @function thresh_callback */
-void thresh_callback(int, void* )
+void computeMomentsUsingOpenCvAndOpenCL(int, void* )
 {
-  clock_t begin = clock();  
-  Mat canny_output;
-  vector<vector<Point> > contours;
-  
-  vector<vector<double>> huMoments;  
-  vector<Vec4i> hierarchy;
+    clock_t begin = clock();  
+    Mat canny_output;
+    vector<vector<Point> > contours;
+    vector<vector<double>> huMoments;  
+    vector<Vec4i> hierarchy;
 
-  /// Detect edges using canny
-  Canny( src_gray, canny_output, thresh, thresh*2, 3 );
-  /// Find contours
-  findContours( canny_output, contours, hierarchy, CV_RETR_CCOMP, CV_CHAIN_APPROX_SIMPLE, Point(0, 0) );
+    // Detect edges using canny
+    Canny( src_gray, canny_output, thresh, thresh*2, 3 );
+    // Find contours
+    findContours( canny_output, contours, hierarchy, RETR_EXTERNAL, CV_CHAIN_APPROX_SIMPLE, Point(0, 0) );
 
+    // Leave only contours with appropriate length
+    const int contour_thresh = 200;
+    const bool closed = false;
+    vector<vector<Point> > filteredContours;
+    for(size_t i = 0; i < contours.size(); i++ )
+    {
+          if(arcLength(contours[i], closed) > contour_thresh)
+          {
+              filteredContours.push_back(contours[i]);
+          }
+    }
+    contours.assign(filteredContours.begin(), filteredContours.end());
 
-	/// Leave only contours with appropriate length
-	const int contour_thresh = 200;
-	const bool closed = false;
-	vector<vector<Point> > filteredContours;
-	for(size_t i = 0; i < contours.size(); i++ )
-	{
-		  if(arcLength(contours[i], closed) > contour_thresh)
-		  {
-		      filteredContours.push_back(contours[i]);
-		  }
-  }
-  contours.assign(filteredContours.begin(), filteredContours.end());
-  
+    // Get the moments
+    vector<Moments> mu(contours.size() );
+    for(size_t i = 0; i < contours.size(); i++ )
+    { 
+        mu[i] = moments( contours[i], false ); 
+    }
 
-  /// Get the moments
-  vector<Moments> mu(contours.size() );
-  for(size_t i = 0; i < contours.size(); i++ )
-     { mu[i] = moments( contours[i], false ); }
-    
     printf("Found contours: %zu\n", contours.size());
-    
-    ///  Get the mass centers:
+
+    //  Get the mass centers:
     vector<Point2f> mc( contours.size() );
     for(size_t i = 0; i < contours.size(); i++ )
     { 
@@ -116,9 +112,9 @@ void thresh_callback(int, void* )
        circle( drawing, mc[i], 4, color, -1, 8, 0 );
      }
      
-  /// Compute Hu moments - use to tell the difference between mirrored objects/rotated 180 degrees
-  for(size_t i = 0; i < contours.size(); i++)
-  {
+    /// Compute Hu moments - use to tell the difference between mirrored objects/rotated 180 degrees
+    for(size_t i = 0; i < contours.size(); i++)
+    {
       Moments mom = mu[i];
       double hu[7];
       HuMoments(mom, hu);
@@ -135,58 +131,76 @@ void thresh_callback(int, void* )
       // mass_center = mc[i];
       Point hu_orient = Point(static_cast<int>(mc[i].x) , static_cast<int>(mc[i].y+scale*(hu[6]))); // 7th Hu moment as a vertical arrow
       drawAxis(drawing, mc[i], hu_orient, Scalar(255, 255, 0), 5);
-  }
-  /*
-   *  TODO: add PCA and draw orientation: major PCA direction multiplied by 7th Hu moment
-   */ 
-  clock_t end = clock();
-  double timeSpentInOpenCV = 1000 * ((double)(end - begin) / CLOCKS_PER_SEC);
-  
-  /// Show in a window
-  namedWindow( "Contours", CV_WINDOW_AUTOSIZE );
-  imshow( "Contours", drawing ); 
+    }
+    /*
+    *  TODO: add PCA and draw orientation: major PCA direction multiplied by 7th Hu moment
+    */ 
+    clock_t end = clock();
+    double timeSpentInOpenCV = 1000 * ((double)(end - begin) / CLOCKS_PER_SEC);
 
-  /// Calculate the area with the moments 00 and compare with the result of the OpenCV function
-  //printf("\t Info: Area and Contour Length \n");
-  for(size_t i = 0; i< contours.size(); i++ )
+    /// Show in a window
+    imshow( "Contours", drawing );
+
+    /// Calculate the area with the moments 00 and compare with the result of the OpenCV function
+    //printf("\t Info: Area and Contour Length \n");
+    for(size_t i = 0; i< contours.size(); i++ )
      {
        //printf(" * Contour[%zu] - Area (M_00) = %.2f - Area OpenCV: %.2f - Length: %.2f \n", i, mu[i].m00, contourArea(contours[i]), arcLength( contours[i], true ) );
        Scalar color = Scalar( rng.uniform(0, 255), rng.uniform(0,255), rng.uniform(0,255) );
        drawContours( drawing, contours, i, color, 2, 8, hierarchy, 0, Point() );
        circle( drawing, mc[i], 4, color, -1, 8, 0 );
-     }
-     
-  printf("Compute moments in OpenCL and compare them to other results...\n");   
-  for(size_t i = 0; i < contours.size(); i++)
-  {
+     }    
+    
+    printf("Compute moments in OpenCL and compare them to other results...\n");   
+    for(size_t i = 0; i < contours.size(); i++)
+    {
     printf("Contour id: %zu\n", i);
     Mat contour =  Mat::zeros( canny_output.size(), CV_8UC1 );
     Scalar white = Scalar(255, 255, 255);
-    drawContours( contour, contours, i, white, 1, 8, hierarchy, 0, Point() ); //to fill the contour use negative value (-1) for thickness (now 2)
+    drawContours( contour, contours, i, white, -1, 8, hierarchy, 0, Point() ); //to fill the contour use negative value (-1) for thickness (now 2)
     Moments im_mom = moments(contour, false);
-  
-  
-  const size_t NUM_CENTRAL_MOMENTS = 7; //m11, m12, m20, m02, m30, m03 is enough for computing HU moments
-  double moments[NUM_CENTRAL_MOMENTS];
+
+
+    //get Region of Interest based on previously found contour
+    Mat roi = Mat::zeros(contour.size(), CV_8UC1);
+
+    vector<vector<Point> > contours_poly( contours.size() );
+    vector<Rect> boundRect( contours.size() );
+    vector<Point2f>center( contours.size() );
+    vector<float>radius( contours.size() );
+
+    for( size_t i = 0; i < contours.size(); i++ )
+    { 
+        approxPolyDP( Mat(contours[i]), contours_poly[i], 3, true );
+        boundRect[i] = boundingRect( Mat(contours_poly[i]) );
+
+        Rect roiPosition(boundRect[i].tl(), boundRect[i].br());
+        roi = contour(roiPosition);
+    }
+
+    imshow( "ROI", roi );
+
+    const size_t NUM_CENTRAL_MOMENTS = 7; //m11, m12, m20, m02, m30, m03 is enough for computing HU moments
+    double moments[NUM_CENTRAL_MOMENTS];
         
-  if(contour.cols %8 != 0)
-  {
+    if(contour.cols %8 != 0)
+    {
       printf("Unable to perform openCL computations - image width must be a multiplication of 8!\n");
       return;
-  }     
-  
-   double timeSpentInOpenCL = computeMomentsWithOpenCL(contour, moments, NUM_CENTRAL_MOMENTS);
-    
-     //Check the answers
-    
-   unsigned char* data_ptr = contour.data;
-   const int IMAGE_WIDTH = contour.cols;
-   const int IMAGE_HEIGHT = contour.rows;     
-   float data2d[IMAGE_HEIGHT][IMAGE_WIDTH], x_, y_;
+    }     
 
-   double m00 = 0, m01 = 0, m10 = 0, m11 = 0, m30 =0, m03 =0, m12 = 0, m21 = 0, m20 =0, m02 =0;
-   for(int i = 0; i < IMAGE_HEIGHT; i++)
-   {
+    double timeSpentInOpenCL = computeMomentsWithOpenCL(contour, moments, NUM_CENTRAL_MOMENTS);
+
+     //Check the answers
+
+    unsigned char* data_ptr = contour.data;
+    const int IMAGE_WIDTH = contour.cols;
+    const int IMAGE_HEIGHT = contour.rows;     
+    float data2d[IMAGE_HEIGHT][IMAGE_WIDTH], x_, y_;
+
+    double m00 = 0, m01 = 0, m10 = 0, m11 = 0, m30 =0, m03 =0, m12 = 0, m21 = 0, m20 =0, m02 =0;
+    for(int i = 0; i < IMAGE_HEIGHT; i++)
+    {
        for(int j = 0; j < IMAGE_WIDTH; j++)
        {
            data2d[i][j] = data_ptr[i * contour.step + j];
@@ -195,13 +209,13 @@ void thresh_callback(int, void* )
            m01 += (j+1) * data2d[i][j];
            m10 += (i+1) * data2d[i][j];
        }
-   }    
-   
-   x_ = m10 / m00;
-   y_ = m01 / m00;
-   
-   for(int i = 0; i < IMAGE_HEIGHT; i++)
-   {
+    }    
+
+    x_ = m10 / m00;
+    y_ = m01 / m00;
+
+    for(int i = 0; i < IMAGE_HEIGHT; i++)
+    {
        for(int j = 0; j < IMAGE_WIDTH; j++)
        {
            float cx = 1 + i - x_;
@@ -215,7 +229,7 @@ void thresh_callback(int, void* )
            m12 += cx*cx*cy*data2d[i][j];
            m03 += cx*cx*cx*data2d[i][j];           
        }
-   } 
+    } 
       //Results  
       //printf("Validiating the answers...\n");
     printf("[Moment]\t\t[Pure C]\t[OpenCV]\t[OpenCL] \n");
@@ -238,13 +252,13 @@ void thresh_callback(int, void* )
            nu20 = m20 / powf(m00, 2),
            nu02 = m02 / powf(m00, 2),
            nu11 = m11 / powf(m00, 2);
-    
-    
+
+
     printf("Norm. centr. moment N11\tN/A \t\t%8e\t%8e\n", im_mom.nu11, nu11);
     printf("Norm. centr. moment N20\tN/A \t\t%8e\t%8e\n", im_mom.nu20, nu20);
     printf("Norm. centr. moment N30\tN/A \t\t%8e\t%8e\n", im_mom.nu30, nu30);
     printf("Norm. centr. moment N21\tN/A \t\t%8e\t%8e\n", im_mom.nu21, nu21);
-    
+
     printf("Norm. centr. moment N03\tN/A \t\t%8e\t%8e\n", im_mom.nu03, nu03);
     printf("Norm. centr. moment N12\tN/A \t\t%8e\t%8e\n", im_mom.nu12, nu12);
     printf("Norm. centr. moment N02\tN/A \t\t%8e\t%8e\n", im_mom.nu02, nu02);
@@ -252,18 +266,18 @@ void thresh_callback(int, void* )
     //instead of computing hu moments by hand we can fall back to OpenCV implementation again
     Moments openClMoments;
     openClMoments.m00 = m00; openClMoments.m01 = m10; openClMoments.m10 = m01;
-    
+
     openClMoments.mu11 = m11; openClMoments.mu03 = m03; openClMoments.mu02 = m02; openClMoments.mu12 = m12;
     openClMoments.mu21 = m21; openClMoments.mu20 = m20; openClMoments.mu30 = m30;
-    
+
     openClMoments.nu11 = nu11; openClMoments.nu03 = nu03; openClMoments.nu02 = nu02; openClMoments.nu12 = nu12;
     openClMoments.nu21 = nu21; openClMoments.nu20 = nu20; openClMoments.nu30 = nu30;
         
-    
+
     //and so on, remember to check m10 and m01
     double huOpenCl[7];
     HuMoments(openClMoments, huOpenCl);
-    
+
     printf("Hu invariant Hu1\tN/A \t\t%8e\t%8e\n", huMoments[i][0], huOpenCl[0]);
     printf("Hu invariant Hu2\tN/A \t\t%8e\t%8e\n", huMoments[i][1], huOpenCl[1]);
     printf("Hu invariant Hu3\tN/A \t\t%8e\t%8e\n", huMoments[i][2], huOpenCl[2]);
@@ -271,11 +285,11 @@ void thresh_callback(int, void* )
     printf("Hu invariant Hu5\tN/A \t\t%8e\t%8e\n", huMoments[i][4], huOpenCl[4]);
     printf("Hu invariant Hu6\tN/A \t\t%8e\t%8e\n", huMoments[i][5], huOpenCl[5]);
     printf("Hu invariant Hu7\tN/A \t\t%8e\t%8e\n", huMoments[i][6], huOpenCl[6]);
-  
+
     printf("Elapsed time in OpenCV: \n%f [ms]\n", timeSpentInOpenCV);
     printf("Elapsed time in OpenCL: \n%f [ms]\n", timeSpentInOpenCL);
 
-  }
+    }
 }
 
 
@@ -392,18 +406,11 @@ cl_program build_program(cl_context ctx, cl_device_id dev, const char* filename)
 
 double computeMomentsWithOpenCL(cv::Mat& frame, double* moments, const int NUM_CENTRAL_MOMENTS)
 {
-
-  if(frame.isContinuous())
-  {
-    //printf("Wymiary: %dx%d\n", frame.rows, frame.cols);
-    //printf("Adres: %d\n", &frame); 
-    //std::cout << frame << std::endl;   
-  }
    const int IMAGE_WIDTH = frame.cols;
    const int IMAGE_HEIGHT = frame.rows;     
    unsigned char* data_ptr = frame.data;
    float x_, y_, m00 = 0, m10 = 0, m01 = 0;
-   float data2d[IMAGE_HEIGHT][IMAGE_WIDTH];
+   unsigned char data2d[IMAGE_HEIGHT][IMAGE_WIDTH];
     
    for(int i = 0; i < IMAGE_HEIGHT; i++)
    {
@@ -466,7 +473,7 @@ double computeMomentsWithOpenCL(cv::Mat& frame, double* moments, const int NUM_C
 
    clock_t begin = clock();
    /* Create data buffer */
-   cl_mem input_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, ARRAY_SIZE * sizeof(float), data2d, &err);
+   cl_mem input_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, ARRAY_SIZE * sizeof(unsigned char), data2d, &err);
    cl_mem sum_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, NUM_MOMENTS * NUM_WORK_GROUPS * sizeof(float), sum, &err);
    cl_mem moments_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, NUM_CENTRAL_MOMENTS * sizeof(double), moments, &err);
    cl_mem workgroups_left_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(int), &workgroups_left, &err);
