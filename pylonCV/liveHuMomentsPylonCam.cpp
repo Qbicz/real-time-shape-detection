@@ -52,7 +52,7 @@ int main(int argc, char* argv[])
         // Open the camera for accessing the parameters.
         camera.Open();
         // set acquisition resolution and offsets
-        if( setCameraParams(nodemap, 640, 480) )
+        if( setCameraParams(nodemap, 640, 480) ) // TODO: if camera is zoomed enough, take whole picture!
             cout << "CAMERA PARAMS NOT SET";
 
         // The parameter MaxNumBuffer can be used to control the count of buffers

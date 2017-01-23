@@ -120,15 +120,35 @@ double preprocessAndComputeOrientation(Mat& src, const int thresh)
         // Ignore contours that are too small or too large
         if (area < 1e3 || area > 1e6) continue;
         
-        // Find Region of interest
+        // Region of interest is around object - actual contour
         boundingBox = boundingRect(contours[i]);
+        // Take the subset of bw image
         roi = bw(boundingBox);
+
+        // Pad the ROI to multiple of 8 columns for OpenCL
+        int numOfColumnsNeeded = 0;
+	    if(roi.cols % 8 != 0)
+	    {
+	        numOfColumnsNeeded = 8 - (roi.cols % 8);
+	        printf("Unable to perform openCL computations - image width must be a multiplication of 8 and needs additional %d columns!\n", numOfColumnsNeeded);
+	        Mat pad = Mat::zeros(roi.rows, numOfColumnsNeeded, CV_8UC1);
+	        hconcat(roi, pad, roi);
+	    }
 
         // Draw a box
         rectangle(src, boundingBox, Scalar(0, 255, 255), 2);
 
     	// Show ROI
     	imshow("ROI", roi);
+
+    	// Compute Hu moments of a single contour
+    	Moments mu = moments( roi, false );
+		double hu[7];
+      	HuMoments(mu, hu);
+      	printf("Hu invariants for contour %zu:\n", i);
+	    for( int i = 0; i < 7; i++ )
+	    	printf("[%d]=%.4e ", i+1, hu[i]);
+	    printf("\n");
 
         // Draw each contour only for visualisation purposes
         //printf("drawContours");
