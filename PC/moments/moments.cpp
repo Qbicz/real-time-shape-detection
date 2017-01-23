@@ -41,7 +41,16 @@ double computeMomentsWithOpenCL(cv::Mat& frame, double* moments, const int NUM_C
 /** @function main */
 int main( int argc, char** argv )
 {
-  // TODO: check for argc < 2
+  if(argc < 2)
+  {
+      printf("Usage: ./moments input_png [init_canny_threshold]\n");
+      exit(1);
+  }
+  
+  if(argc == 3)
+  {
+      thresh = atoi(argv[2]);
+  }
 
   /// Load source image and convert it to gray
   src = imread( argv[1], 1 );
@@ -403,7 +412,7 @@ double computeMomentsWithOpenCL(cv::Mat& frame, double* moments, const int NUM_C
    const int IMAGE_HEIGHT = frame.rows;     
    unsigned char* data_ptr = frame.data;
    float x_, y_, m00 = 0, m10 = 0, m01 = 0;
-   float data2d[IMAGE_HEIGHT][IMAGE_WIDTH];
+   unsigned char data2d[IMAGE_HEIGHT][IMAGE_WIDTH];
     
    for(int i = 0; i < IMAGE_HEIGHT; i++)
    {
@@ -466,7 +475,7 @@ double computeMomentsWithOpenCL(cv::Mat& frame, double* moments, const int NUM_C
 
    clock_t begin = clock();
    /* Create data buffer */
-   cl_mem input_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, ARRAY_SIZE * sizeof(float), data2d, &err);
+   cl_mem input_buffer = clCreateBuffer(context, CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, ARRAY_SIZE * sizeof(unsigned char), data2d, &err);
    cl_mem sum_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, NUM_MOMENTS * NUM_WORK_GROUPS * sizeof(float), sum, &err);
    cl_mem moments_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, NUM_CENTRAL_MOMENTS * sizeof(double), moments, &err);
    cl_mem workgroups_left_buffer = clCreateBuffer(context, CL_MEM_READ_WRITE | CL_MEM_COPY_HOST_PTR, sizeof(int), &workgroups_left, &err);

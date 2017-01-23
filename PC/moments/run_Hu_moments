@@ -1,1 +1,4 @@
-make && ./moments ../img/test_mirror/test1.png
+make && 
+./moments ../img/test/test1.png 150
+./moments ../img/test/test2.png 140
+./moments ../img/test/test3.png 110
