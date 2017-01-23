@@ -24,8 +24,8 @@ void drawAxis(Mat& img, Point p, Point q, Scalar colour, const float scale = 0.2
     double hypotenuse;
     angle = atan2( (double) p.y - q.y, (double) p.x - q.x ); // angle in radians
     hypotenuse = sqrt( (double) (p.y - q.y) * (p.y - q.y) + (p.x - q.x) * (p.x - q.x));
-//    double degrees = angle * 180 / CV_PI; // convert radians to degrees (0-180 range)
-//    cout << "Degrees: " << abs(degrees - 180) << endl; // angle in 0-360 degrees range
+    double degrees = angle * 180 / CV_PI; // convert radians to degrees (0-180 range)
+    cout << "Degrees: " << abs(degrees - 180) << endl; // angle in 0-360 degrees range
 
     // Here we lengthen the arrow by a factor of scale
     q.x = (int) (p.x - scale * hypotenuse * cos(angle));
@@ -80,13 +80,12 @@ double getOrientation(const vector<Point> &pts, Mat &img)
 //! [pca]
 //! [visualization]
     // Draw the principal components
-    /*
     circle(img, cntr, 3, Scalar(255, 0, 255), 2);
     Point p1 = cntr + 0.02 * Point(static_cast<int>(eigen_vecs[0].x * eigen_val[0]), static_cast<int>(eigen_vecs[0].y * eigen_val[0]));
     Point p2 = cntr - 0.02 * Point(static_cast<int>(eigen_vecs[1].x * eigen_val[1]), static_cast<int>(eigen_vecs[1].y * eigen_val[1]));
     drawAxis(img, cntr, p1, Scalar(0, 255, 0), 1);
-    drawAxis(img, cntr, p2, Scalar(255, 255, 0), 5);
-    */
+    drawAxis(img, cntr, p2, Scalar(255, 255, 0), 1);
+    
     double angle = atan2(eigen_vecs[0].y, eigen_vecs[0].x); // orientation in radians
 //! [visualization]
 
@@ -134,11 +133,13 @@ int main(int, char** argv)
     {
         // Calculate the area of each contour
         double area = contourArea(contours[i]);
+
         // Ignore contours that are too small or too large
-        if (area < 1e2 || 1e5 < area) continue;
+        if (area < 6e4 || 1e6 < area) continue;
+        cout << "Contour area: " << area << endl;
 
         // Draw each contour only for visualisation purposes
-        //drawContours(src, contours, static_cast<int>(i), Scalar(0, 0, 255), 2, 8, hierarchy, 0);
+        drawContours(src, contours, static_cast<int>(i), Scalar(0, 0, 255), 2, 8, hierarchy, 0);
         // Find the orientation of each shape
         getOrientation(contours[i], src);
     }
@@ -149,7 +150,8 @@ int main(int, char** argv)
     double millisecs = 1000*(t1-t0)/cv::getTickFrequency();
     cout << millisecs << " [ms], " << t1-t0 << " ticks." << endl;
 
-    //imshow("output", src);
+    namedWindow("PCA", CV_WINDOW_NORMAL);
+    imshow("PCA", src);
 
     waitKey(0);
     return 0;
