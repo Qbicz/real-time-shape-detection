@@ -38,7 +38,10 @@ using namespace std;
 #define recordVideo 0
 
 // Number of images to be grabbed.
-static const uint32_t c_countOfImagesToGrab = 1000;
+static const uint32_t c_countOfImagesToGrab = 500;
+
+// Functions - TODO: move to separate helper file, common for all apps
+int setCameraParams(INodeMap& nodemap, int64_t newWidth, int64_t newHeight);
 
 int main(int argc, char* argv[])
 {
@@ -60,7 +63,12 @@ int main(int argc, char* argv[])
         cout << "Using device " << camera.GetDeviceInfo().GetModelName() << endl;
 
         
-        // TODO: ustawic niska rozdzielczosc zdjecia akwizycji
+        INodeMap& nodemap = camera.GetNodeMap();
+        // Open the camera for accessing the parameters.
+        camera.Open();
+        // set acquisition resolution and offsets
+        if( setCameraParams(nodemap, 600, 800) ) // TODO: if camera is zoomed enough, take whole picture!
+            cout << "CAMERA PARAMS NOT SET";
 
         // The parameter MaxNumBuffer can be used to control the count of buffers
         // allocated for grabbing. The default value of this parameter is 10.
@@ -71,13 +79,6 @@ int main(int argc, char* argv[])
         formatConverter.OutputPixelFormat= PixelType_BGR8packed;
         CPylonImage pylonImage;
         int grabbedImages = 0;
-
-        cout << "// Get camera nodemap to access parameters\n";
-        INodeMap& nodemap = camera.GetNodeMap();
-        
-        cout << "// Create pointers to access the camera Width and Height\n";
-        CIntegerPtr width = nodemap.GetNode("Width");
-        CIntegerPtr height = nodemap.GetNode("Height");
         
         cout << "// Create an OpenCV video creator\n";
         VideoWriter cvVideoCreator;
@@ -86,7 +87,7 @@ int main(int argc, char* argv[])
         
         cout << "// define the video frame size.\n";
         //cv::Size frameSize = Size((int)width->GetValue(), (int)height->GetValue());
-        cv::Size frameSize = Size(640, 480);
+        cv::Size frameSize = Size(600, 800);
         //cout << "Video frame size: " << (int)width->GetValue() << ", " << (int)height->GetValue() << endl;
         
         cout << "// set the codec and frame rate\n";
@@ -167,5 +168,32 @@ int main(int argc, char* argv[])
     while( cin.get() != '\n');
 
     return exitCode;
+}
+
+int setCameraParams(INodeMap& nodemap, int64_t newWidth, int64_t newHeight)
+{
+    // Get the integer nodes describing the AOI.
+    CIntegerPtr offsetX( nodemap.GetNode( "OffsetX"));
+    CIntegerPtr offsetY( nodemap.GetNode( "OffsetY"));
+    CIntegerPtr width( nodemap.GetNode( "Width"));
+    CIntegerPtr height( nodemap.GetNode( "Height"));
+
+    // On Basler acA2000-165umNIR and acA2000-165uc cameras the offsets are read-only.
+
+    //TODO: Some properties have restrictions. Use GetInc/GetMin/GetMax to make sure you set a valid value.
+    width->SetValue(newWidth);
+    height->SetValue(newHeight);
+
+    cout << "OffsetX          : " << offsetX->GetValue() << endl;
+    cout << "OffsetY          : " << offsetY->GetValue() << endl;
+
+    cout << "Width            : " << width->GetValue() << endl;
+    cout << "Height           : " << height->GetValue() << endl;
+
+    // Test is the value is set correctly
+    if (width->GetValue() == newWidth && height->GetValue() == newHeight)
+        return 0;
+    else
+        return 1;
 }
 

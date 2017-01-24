@@ -28,7 +28,7 @@ static const uint32_t c_countOfImagesToGrab = 40000; // test fps
 double preprocessAndComputeOrientation(Mat& src, const int thresh = 100);
 void drawAxis(Mat&, Point, Point, Scalar, const float);
 double getOrientation(const vector<Point> &, Mat&);
-int setCameraParams(INodeMap& nodemap, int64_t newWidth, int64_t newHeight, int16_t, int16_t);
+int setCameraParams(INodeMap& nodemap, int64_t newWidth, int64_t newHeight);
 
 int main(int argc, char* argv[])
 {
@@ -52,7 +52,7 @@ int main(int argc, char* argv[])
         // Open the camera for accessing the parameters.
         camera.Open();
         // set acquisition resolution and offsets
-        if( setCameraParams(nodemap, 640, 480, 300, 300) ) // TODO: if camera is zoomed enough, take whole picture!
+        if( setCameraParams(nodemap, 600, 800) ) // TODO: if camera is zoomed enough, take whole picture!
             cout << "CAMERA PARAMS NOT SET";
 
         // The parameter MaxNumBuffer can be used to control the count of buffers
@@ -184,7 +184,7 @@ double preprocessAndComputeOrientation(Mat& src, const int thresh)
         // Calculate the area of each contour
         double area = contourArea(contours[i]);
         // Ignore contours that are too small or too large
-        if (area < 3e4 || area > 1e6) continue;
+        if (area < 1e3 || area > 1e6) continue;
         // <Nokia 920 back>
 
         printf("area = %f for contour %lu\n", area, i);
@@ -277,29 +277,15 @@ double getOrientation(const vector<Point> &pts, Mat &img)
     return angle;
 }
 
-int setCameraParams(INodeMap& nodemap, int64_t newWidth, int64_t newHeight, int16_t newXoffset, int16_t newYoffset)
+int setCameraParams(INodeMap& nodemap, int64_t newWidth, int64_t newHeight)
 {
-
     // Get the integer nodes describing the AOI.
     CIntegerPtr offsetX( nodemap.GetNode( "OffsetX"));
     CIntegerPtr offsetY( nodemap.GetNode( "OffsetY"));
     CIntegerPtr width( nodemap.GetNode( "Width"));
     CIntegerPtr height( nodemap.GetNode( "Height"));
 
-    cout << "Max X offset" << offsetX->GetMax() << endl;
-    cout << "Max Y offset" << offsetY->GetMax() << endl;
-
-    // On some cameras the offsets are read-only,
-    // so we check whether we can write a value. Otherwise, we would get an exception.
-    // GenApi has some convenience predicates to check this easily.
-    if ( IsWritable( offsetX))
-    {
-        offsetX->SetValue(newXoffset);
-    }
-    if ( IsWritable( offsetY))
-    {
-        offsetY->SetValue(newYoffset);
-    }
+    // On Basler acA2000-165umNIR and acA2000-165uc cameras the offsets are read-only.
 
     //TODO: Some properties have restrictions. Use GetInc/GetMin/GetMax to make sure you set a valid value.
     width->SetValue(newWidth);
