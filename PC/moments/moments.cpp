@@ -94,7 +94,7 @@ void computeMomentsUsingOpenCvAndOpenCL(int, void* )
     vector<Moments> mu(contours.size() );
     for(size_t i = 0; i < contours.size(); i++ )
     { 
-        mu[i] = moments( contours[i], false ); 
+        mu[i] = moments( contours[i], false );
     }
 
     printf("Found contours: %zu\n", contours.size());

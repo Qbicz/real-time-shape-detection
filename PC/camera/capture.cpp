@@ -150,6 +150,12 @@ double preprocessAndComputeOrientation(Mat& src, const int thresh)
 	    	printf("[%d]=%.4e ", i+1, hu[i]);
 	    printf("\n");
 
+		/// Show 7th Hu moment as an arrow from the mass center
+      	mc = Point2f( mu.m10/mu[i].m00 , mu[i].m01/mu[i].m00 );  
+      	Point hu_orient = Point(static_cast<int>(mc[i].x) , static_cast<int>(mc[i].y+scale*(hu[6]))); // 7th Hu moment as a vertical arrow
+      	drawAxis(drawing, mc[i], hu_orient, Scalar(255, 255, 0), 5);
+
+
         // Draw each contour only for visualisation purposes
         //printf("drawContours");
         drawContours(src, contours, static_cast<int>(i), Scalar(0, 0, 255), -1, 8, hierarchy, 0);

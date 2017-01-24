@@ -22,7 +22,7 @@ using namespace cv;
 using namespace std;
 
 // Number of images to be grabbed.
-static const uint32_t c_countOfImagesToGrab = 40000; // test fps
+static const uint32_t c_countOfImagesToGrab = 400; // test fps
 
 // Function declarations - TODO: move to file which will be #included
 double preprocessAndComputeOrientation(Mat& src, const int thresh = 100);
@@ -179,13 +179,37 @@ double preprocessAndComputeOrientation(Mat& src, const int thresh)
     vector<vector<Point> > contours;
     findContours(bw, contours, hierarchy, CV_RETR_LIST, CV_CHAIN_APPROX_NONE);
 
+    Rect boundingBox;
+    Mat roi;
+
     for (size_t i = 0; i < contours.size(); ++i)
     {
         // Calculate the area of each contour
         double area = contourArea(contours[i]);
         // Ignore contours that are too small or too large
         if (area < 1e3 || area > 1e6) continue;
-        // <Nokia 920 back>
+
+        // Region of interest is around object - actual contour
+        boundingBox = boundingRect(contours[i]);
+        // Take the subset of bw image
+        roi = bw(boundingBox);
+
+        // Pad the ROI to multiple of 8 columns for OpenCL
+        int numOfColumnsNeeded = 0;
+        if(roi.cols % 8 != 0)
+        {
+            numOfColumnsNeeded = 8 - (roi.cols % 8);
+            printf("Unable to perform openCL computations - image width must be a multiplication of 8 and needs additional %d columns!\n", numOfColumnsNeeded);
+            Mat pad = Mat::zeros(roi.rows, numOfColumnsNeeded, CV_8UC1);
+            hconcat(roi, pad, roi);
+        }
+
+        // Draw a box
+        rectangle(src, boundingBox, Scalar(0, 255, 255), 2);
+
+        // Show ROI
+        imshow("ROI", roi);
+
 
         printf("area = %f for contour %lu\n", area, i);
 
