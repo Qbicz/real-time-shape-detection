@@ -38,7 +38,7 @@ using namespace std;
 #define recordVideo 0
 
 // Number of images to be grabbed.
-static const uint32_t c_countOfImagesToGrab = 500;
+static const uint32_t c_countOfImagesToGrab = 400;
 
 // Functions - TODO: move to separate helper file, common for all apps
 int setCameraParams(INodeMap& nodemap, int64_t newWidth, int64_t newHeight);
@@ -134,6 +134,10 @@ int main(int argc, char* argv[])
                     std::string imageName(s.str());
                     // Save an OpenCV image.
                     imwrite(imageName, openCvImage);
+                    // TODO: save to RAM first, after aquisition to disk
+                    // use std::vector of cv::Mat
+                    // check for 165 FPS
+
                     grabbedImages++;
                 }
                 

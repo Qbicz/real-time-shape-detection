@@ -10,7 +10,7 @@ PYLON_ROOT ?= /opt/pylon5
 # Build tools and flags
 LD         := $(CXX)
 CPPFLAGS   := $(shell $(PYLON_ROOT)/bin/pylon-config --cflags) `pkg-config --cflags --libs opencv`
-CXXFLAGS   := #e.g., CXXFLAGS=-g -O0 for debugging 
+CXXFLAGS   := -O3 #e.g., CXXFLAGS=-g -O0 for debugging 
 LDFLAGS    := $(shell $(PYLON_ROOT)/bin/pylon-config --libs-rpath) 
 LDLIBS     := $(shell $(PYLON_ROOT)/bin/pylon-config --libs) `pkg-config --cflags --libs opencv`
 #CPPLIBS    :=

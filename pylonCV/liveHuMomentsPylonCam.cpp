@@ -22,7 +22,8 @@ using namespace cv;
 using namespace std;
 
 // Number of images to be grabbed.
-static const uint32_t c_countOfImagesToGrab = 400; // test fps
+static const uint32_t c_countOfImagesToGrab = 40000; // test fps
+const float huScale = 4e9;
 
 // Function declarations - TODO: move to file which will be #included
 double preprocessAndComputeOrientation(Mat& src, const int thresh = 100);
@@ -63,6 +64,21 @@ int main(int argc, char* argv[])
         CImageFormatConverter formatConverter;
         formatConverter.OutputPixelFormat= PixelType_BGR8packed;
         CPylonImage pylonImage;
+#if 0
+        cout << "Create an OpenCV video creator\n";
+        VideoWriter cvVideoCreator;
+        // Create an OpenCV image
+        Mat openCvImage;
+        
+        cout << "define the video frame size.\n";
+        //cv::Size frameSize = Size((int)width->GetValue(), (int)height->GetValue());
+        cv::Size frameSize = Size(600, 800);
+        //cout << "Video frame size: " << (int)width->GetValue() << ", " << (int)height->GetValue() << endl;
+        
+        cout << "set the codec and frame rate\n";
+        if(recordVideo)
+            cvVideoCreator.open("NutsVideo.avi", CV_FOURCC('D', 'I', 'V', 'X'), 20, frameSize, true);
+#endif   
 
         // Create an OpenCV image
         Mat openCvImage;
@@ -210,8 +226,22 @@ double preprocessAndComputeOrientation(Mat& src, const int thresh)
         // Show ROI
         imshow("ROI", roi);
 
-
         printf("area = %f for contour %lu\n", area, i);
+
+        // Compute Hu moments of a single contour
+        Moments mu = moments( roi, false );
+        double hu[7];
+        HuMoments(mu, hu);
+        printf("Hu invariants for contour %zu:\n", i);
+        for( int j = 0; j < 7; j++ )
+            printf("[%d]=%.4e ", j+1, hu[j]);
+        printf("\n");
+
+        /// Show 7th Hu moment as an arrow from the mass center
+        Point2f mc = Point2f( mu.m10/mu.m00 , mu.m01/mu.m00 );  
+        Point hu_orient = Point(static_cast<int>(mc.x) , static_cast<int>(mc.y+huScale*(hu[6]))); // 7th Hu moment as a vertical arrow
+        drawAxis(src, mc, hu_orient, Scalar(255, 255, 0), 5);
+
 
         // Draw each contour only for visualisation purposes
         drawContours(src, contours, static_cast<int>(i), Scalar(0, 0, 255), 2, 8, hierarchy, 0);
