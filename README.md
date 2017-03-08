@@ -4,18 +4,18 @@ Part of system for automatic segregation of seeds in an arboretum.
 
 # Run code on Ubuntu using your webcam
 First, please install OpenCV 2.4
-'''bash
+```bash
 sudo apt install libopencv-dev
-'''
+```
 Compile application:
-'''bash
+```bash
 cd PC/camera
 make
-'''
+```
 Run the application using default camera (usually webcam).
-'''bash
+```bash
 ./capture
-'''
+```
 You will see that in the video stream from camera the application finds an object, shows its bounding box and computes the orientation. Orientation direction is shown in form of arrows.
 
 Example output of the algorithm running on ODROID-XU4 minicomputer with Basler acA2000-165um high-speed camera:
