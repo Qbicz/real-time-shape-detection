@@ -21,6 +21,14 @@ You will see that in the video stream from camera the application finds an objec
 Example output of the algorithm running on ODROID-XU4 minicomputer with Basler acA2000-165um high-speed camera:
 <img src="https://raw.githubusercontent.com/Qbicz/real-time-shape-detection/master/report/real-moving-PCA.png", alt="Contours and orientation of a moving seed" width="400">
 
+# OpenCL installation on ODROID-XU4 with Ubuntu
+Install https://developer.arm.com/technologies/compute-library
+
+If the GL/gl.h is missing, install
+```bash
+sudo apt install mesa-common-dev
+```
+
 # Some bibliography suggestions:
 http://www.sci.utah.edu/~gerig/CS7960-S2010/handouts/Hu.pdf
 
