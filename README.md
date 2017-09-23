@@ -29,6 +29,12 @@ If the GL/gl.h is missing, install
 sudo apt install mesa-common-dev
 ```
 
+# Information about OpenCL resources available on the machine
+```bash
+sudo apt install clinfo
+clinfo
+```
+
 # Some bibliography suggestions:
 http://www.sci.utah.edu/~gerig/CS7960-S2010/handouts/Hu.pdf
 
