@@ -21,12 +21,28 @@ You will see that in the video stream from camera the application finds an objec
 Example output of the algorithm running on ODROID-XU4 minicomputer with Basler acA2000-165um high-speed camera:
 <img src="https://raw.githubusercontent.com/Qbicz/real-time-shape-detection/master/report/real-moving-PCA.png", alt="Contours and orientation of a moving seed" width="400">
 
-# OpenCL installation on ODROID-XU4 with Ubuntu
+# OpenCL support on ODROID-XU4 with Ubuntu
 Install https://developer.arm.com/technologies/compute-library
 
 If the GL/gl.h is missing, install
 ```bash
 sudo apt install mesa-common-dev
+```
+
+# OpenCL generic Ubuntu packages
+Basic installation
+```bash
+sudo apt install ocl-icd-libopencl1
+sudo apt install opencl-headers
+sudo apt install clinfo
+```
+Compiling OpenCL code
+```bash
+sudo apt install ocl-icd-opencl-dev
+```
+In order to run OpenCL on Intel GT (IvyBridge and up)
+```bash
+sudo apt install beignet
 ```
 
 # Information about OpenCL resources available on the machine
