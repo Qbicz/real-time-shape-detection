@@ -1,11 +1,23 @@
+#include <fstream>
+
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/ml/ml.hpp>
 
+#include <json.hpp>
+
 using namespace cv;
+using json = nlohmann::json;
 
 int main()
 {
+    // Read input training data to JSON object
+    std::ifstream input_training_data("../dataset_training.json");
+    json training_data;
+    input_training_data >> training_data;
+ 
+    std::cout << training_data;
+
     // Set up training data
     float labels[4] = {1.0, 1.0, -1.0, 1.0};
     Mat labelsMat(4, 1, CV_32FC1, labels);
