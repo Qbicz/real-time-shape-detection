@@ -6,6 +6,8 @@
 
 #include <json.hpp>
 
+#define DATA_DIMENSIONS 2 // for Hu moments, it will be 7
+
 using namespace cv;
 using json = nlohmann::json;
 
@@ -16,13 +18,20 @@ int main()
     json training_data;
     input_training_data >> training_data;
  
-    std::cout << training_data;
+    std::cout << "Training data set: " << training_data << std::endl;
+    std::cout << "Data set size: " << training_data.size() << std::endl;
 
     // Set up training data
-    float labels[4] = {1.0, 1.0, -1.0, 1.0};
-    Mat labelsMat(4, 1, CV_32FC1, labels);
+    float labels[training_data.size()] = {1.0, 1.0, -1.0, 1.0};
+    float trainingData[training_data.size()][DATA_DIMENSIONS] = { {501, 10}, {255, 10}, {501, 255}, {10, 501} };
+    for (auto element : training_data)
+    {
+        std::cout << "element: " << element << std::endl; 
+        
+    }
 
-    float trainingData[4][2] = { {501, 10}, {255, 10}, {501, 255}, {10, 501} };
+    // Put training data in format for OpenCV SVM
+    Mat labelsMat(4, 1, CV_32FC1, labels);
     Mat trainingDataMat(4, 2, CV_32FC1, trainingData);
 
     // Set up SVM's parameters
