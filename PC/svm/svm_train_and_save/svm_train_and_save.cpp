@@ -1,4 +1,5 @@
 #include <fstream>
+#include <vector>
 
 #include <opencv2/core/core.hpp>
 #include <opencv2/highgui/highgui.hpp>
@@ -11,28 +12,63 @@
 using namespace cv;
 using json = nlohmann::json;
 
+static std::vector<float> svm_build_single_element(json &element)
+{
+    std::vector<float> training_element;
+    std::cout << "element: " << element << std::endl; 
+    training_element.push_back(element["x"]);
+    training_element.push_back(element["y"]);
+    return training_element;
+}
+
+static void print_vector(std::vector<float> &vect)
+{
+    std::cout << "std::vector [ ";
+    for (auto vect_elem : vect)
+    {
+        std::cout << vect_elem << " ";
+    }
+    std::cout << "]\n";
+}
+
 int main()
 {
     // Read input training data to JSON object
-    std::ifstream input_training_data("../dataset_training.json");
-    json training_data;
-    input_training_data >> training_data;
+    std::ifstream input_training_data("../data/dataset_training.json");
+    json training_data_json;
+    input_training_data >> training_data_json;
  
-    std::cout << "Training data set: " << training_data << std::endl;
-    std::cout << "Data set size: " << training_data.size() << std::endl;
+    std::cout << "Training data set: " << training_data_json << std::endl;
+    std::cout << "Data set size: " << training_data_json.size() << std::endl;
 
     // Set up training data
-    float labels[training_data.size()] = {1.0, 1.0, -1.0, 1.0};
-    float trainingData[training_data.size()][DATA_DIMENSIONS] = { {501, 10}, {255, 10}, {501, 255}, {10, 501} };
-    for (auto element : training_data)
+    std::vector<float> labels;
+    std::vector<float> training_data;
+
+    for (auto element : training_data_json)
     {
-        std::cout << "element: " << element << std::endl; 
-        
+        // Read training data
+        std::vector<float> training_element = svm_build_single_element(element);
+        // Put new element at the end of vector containing all data
+        training_data.insert(training_data.end(),
+                             training_element.begin(),
+                             training_element.end()
+                            );
+        print_vector(training_data);
+
+        // Read training label
+        labels.push_back(element["label"]);
     }
 
-    // Put training data in format for OpenCV SVM
-    Mat labelsMat(4, 1, CV_32FC1, labels);
-    Mat trainingDataMat(4, 2, CV_32FC1, trainingData);
+    // Create a matrix from vector and reshape matrix to have one training element in one row
+    // It is done this way because there's no conversion between vector<vector<float> > and cv::Mat
+    assert(DATA_DIMENSIONS*training_data_json.size() == training_data.size());
+    Mat training_data_mat = Mat(training_data).reshape(0, training_data_json.size());
+
+    // Put training data labels in format for OpenCV SVM
+    print_vector(labels);
+    assert(labels.size() == training_data_json.size());
+    Mat labels_mat(labels);
 
     // Set up SVM's parameters
     CvSVMParams params;
@@ -42,7 +78,7 @@ int main()
 
     // Train the SVM
     CvSVM SVM;
-    SVM.train(trainingDataMat, labelsMat, Mat(), Mat(), params);
+    SVM.train(training_data_mat, labels_mat, Mat(), Mat(), params);
 
     SVM.save("trained.svm");
 }
