@@ -2,6 +2,7 @@ CXX=g++
 CXXFLAGS= `pkg-config --libs opencv` -std=c++11
 # --cflags
 DEPS = 
+INCLUDES = -I../includes
 OBJ = svm_train_and_save.o
 
 
@@ -9,10 +10,10 @@ all: welcome clean svm_train_and_save
 	
 %.o: %.cpp $(DEPS)
 	@echo Compiling $< with $(CXX)...
-	$(CXX) -c -o $@ $< $(CXXFLAGS)
+	$(CXX) -c $(INCLUDES) -o $@ $< $(CXXFLAGS)
 
 svm_train_and_save: $(OBJ)
-	$(CXX) -o $@ $^ $(CXXFLAGS)
+	$(CXX) $(INCLUDES) -o $@ $^ $(CXXFLAGS)
 
 clean:
 	rm -f *.o *~
