@@ -1,7 +1,12 @@
+ROOT_DIR=../..
+
 CXX=g++
-CXXFLAGS= `pkg-config --libs opencv`
+CXXFLAGS= `pkg-config --libs opencv` -std=c++11 -I$(ROOT_DIR)/modules
 DEPS = 
-OBJ = hu_moments_gather.o
+
+SRC = $(wildcard ./*.cpp) \
+      $(wildcard $(ROOT_DIR)/modules/*.cpp)
+OBJ = $(SRC:.cpp=.o)
 
 all: welcome clean hu_moments_gather
 	
