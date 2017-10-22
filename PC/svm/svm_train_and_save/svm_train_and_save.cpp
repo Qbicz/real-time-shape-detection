@@ -6,30 +6,10 @@
 #include <opencv2/ml/ml.hpp>
 
 #include <json.hpp>
-
-#define DATA_DIMENSIONS 2 // for Hu moments, it will be 7
+#include "common.h"
 
 using namespace cv;
 using json = nlohmann::json;
-
-static std::vector<float> svm_build_single_element(json &element)
-{
-    std::vector<float> training_element;
-    std::cout << "element: " << element << std::endl; 
-    training_element.push_back(element["x"]);
-    training_element.push_back(element["y"]);
-    return training_element;
-}
-
-static void print_vector(std::vector<float> &vect)
-{
-    std::cout << "std::vector [ ";
-    for (auto vect_elem : vect)
-    {
-        std::cout << vect_elem << " ";
-    }
-    std::cout << "]\n";
-}
 
 int main()
 {
@@ -43,27 +23,14 @@ int main()
 
     // Set up training data
     std::vector<float> labels;
-    std::vector<float> training_data;
-
+            
+    // Read training label
     for (auto element : training_data_json)
     {
-        // Read training data
-        std::vector<float> training_element = svm_build_single_element(element);
-        // Put new element at the end of vector containing all data
-        training_data.insert(training_data.end(),
-                             training_element.begin(),
-                             training_element.end()
-                            );
-        print_vector(training_data);
-
-        // Read training label
         labels.push_back(element["label"]);
     }
 
-    // Create a matrix from vector and reshape matrix to have one training element in one row
-    // It is done this way because there's no conversion between vector<vector<float> > and cv::Mat
-    assert(DATA_DIMENSIONS*training_data_json.size() == training_data.size());
-    Mat training_data_mat = Mat(training_data).reshape(0, training_data_json.size());
+    Mat training_data_mat = prepare_data_mat(training_data_json);
 
     // Put training data labels in format for OpenCV SVM
     print_vector(labels);
