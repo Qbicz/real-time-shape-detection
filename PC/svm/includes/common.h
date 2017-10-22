@@ -1,5 +1,5 @@
-#ifndef COMMON
-#define COMMON
+#ifndef COMMON_H
+#define COMMON_H
 
 #include "json.hpp"
 
