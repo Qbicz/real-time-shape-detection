@@ -6,23 +6,26 @@
 
 #include "print_vector.h"
 
-#define HU_MOMENTS_NUM 7
+#define SHOW_IMAGES     1
+#define HU_MOMENTS_NUM  7
 
 using namespace cv;
 
-// TODO: move to separate file included by all modules working with Hu moments
+// Type for Hu moments
 typedef std::vector<float> hu_moments_t;
 
 hu_moments_t hu_moments_compute(Mat& src, const int thresh);
 
 int canny_threshold;
+const int threshold_ratio = 2;
+const int sobel_kernel_size = 3;
 
 
 int main(int argc, char** argv)
 {
     if(argc < 2)
     {
-        printf("Usage: ./moments input_png [init_canny_threshold]\n");
+        std::cout << "Usage: ./moments <input_image> <init_canny_threshold>\n";
         exit(1);
     }
 
@@ -40,16 +43,14 @@ int main(int argc, char** argv)
     return 0;
 }
 
-hu_moments_t hu_moments_compute(Mat& src, const int thresh)
+hu_moments_t hu_moments_compute(Mat& src, const int canny_threshold)
 {
-    double hu[HU_MOMENTS_NUM];
     Mat gray_image;
     cvtColor(src, gray_image, COLOR_BGR2GRAY);
 
     // Detect edges using Canny
     Mat edges_image;
-    // TODO: do not use magic values
-    Canny( gray_image, edges_image, canny_threshold, canny_threshold*2, 3 );
+    Canny(gray_image, edges_image, canny_threshold, canny_threshold*threshold_ratio, sobel_kernel_size);
     
     // Find all the contours in the thresholded image
     vector<Vec4i> hierarchy;
@@ -65,23 +66,35 @@ hu_moments_t hu_moments_compute(Mat& src, const int thresh)
 
         printf("area = %f for contour %lu\n", area, i);
 
+        // Prepare empty image on which the shape will be drawn
+        Mat shape(src);
+        shape = (Scalar(0,0,0));
+        // Function fillPoly() expects an array of polygons - we pass only one polygon
+        const Point* contour_vertices[1] = {&contours[i][0]};
+        int vertices_num[1] = {static_cast<int>(contours[i].size())};
         // Get shape by filling a contour
-        Point contour_vertices[1][contours[i].size()];
-        //contour_vertices[0] = &contours[i];
-        //Mat shape;
-        //fillPoly(shape, contour_vertices, (contours[i].size()), 1, Scalar(255, 255, 255));
+        fillPoly(shape, contour_vertices, vertices_num, 1, Scalar(255, 255, 255));
 
-        // Compute Hu moments of a single contour
+        if(SHOW_IMAGES)
+        {
+            imshow("Filled contour", shape);
+            waitKey(0);
+        }
+
+        // Compute Hu moments the filled shape
         Moments mu = moments( contours[i], false );
+        double hu[HU_MOMENTS_NUM];
         HuMoments(mu, hu);
+
         printf("Hu invariants for contour %zu:\n", i);
         for( int j = 0; j < HU_MOMENTS_NUM; j++ )
             printf("[%d]=%.4e ", j+1, hu[j]);
         printf("\n");
-
+        
+        // We return Hu moments for the first contour of a given area
+        hu_moments_t hu_vector;
+        hu_vector.assign(hu, hu + HU_MOMENTS_NUM);
+        return hu_vector;
     }
-    hu_moments_t hu_vector;
-    hu_vector.assign(hu, hu + HU_MOMENTS_NUM);
-    return hu_vector;
 }
 
