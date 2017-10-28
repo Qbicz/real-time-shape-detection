@@ -3,12 +3,9 @@ ROOT_DIR=../../..
 CXX=g++
 CXXFLAGS= `pkg-config --libs opencv` -std=c++11 -I$(ROOT_DIR)/modules
 # --cflags
-<<<<<<< HEAD
 DEPS = 
 INCLUDES = -I../includes
 OBJ = svm_train_and_save.o
-=======
->>>>>>> aa6e728... svm train: Makefile linking modules src directory
 
 SRC = $(wildcard ./*.cpp) \
       $(wildcard $(ROOT_DIR)/modules/*.cpp)

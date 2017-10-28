@@ -25,7 +25,7 @@ int main(int argc, char** argv)
 {
     if(argc < 2)
     {
-        std::cout << "Usage: ./moments <input_image> <init_canny_threshold>\n";
+        std::cout << "Usage: ./hu_moments_gather <input_image> <init_canny_threshold>\n";
         exit(1);
     }
 
