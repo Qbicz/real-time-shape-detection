@@ -45,6 +45,8 @@ int main(int argc, char** argv)
 
 hu_moments_t hu_moments_compute(Mat& src, const int canny_threshold)
 {
+    hu_moments_t hu_vector;
+
     Mat gray_image;
     cvtColor(src, gray_image, COLOR_BGR2GRAY);
 
@@ -62,12 +64,14 @@ hu_moments_t hu_moments_compute(Mat& src, const int canny_threshold)
         // Calculate the area of each contour
         double area = contourArea(contours[i]);
         // Ignore contours that are too small or too large
-        if (area < 1e3 || area > 1e6) continue;
+        if (area < 1e3 || area > 1e7) continue;
 
         printf("area = %f for contour %lu\n", area, i);
 
-        // Prepare empty image on which the shape will be drawn
-        Mat shape(src);
+        /* Prepare empty image on which the shape will be drawn.
+           The image will be used by cv::moments() and thus has to be
+           1-channel or with the channel of interest selected. */
+        Mat shape(gray_image);
         shape = (Scalar(0,0,0));
         // Function fillPoly() expects an array of polygons - we pass only one polygon
         const Point* contour_vertices[1] = {&contours[i][0]};
@@ -82,7 +86,7 @@ hu_moments_t hu_moments_compute(Mat& src, const int canny_threshold)
         }
 
         // Compute Hu moments the filled shape
-        Moments mu = moments( contours[i], false );
+        Moments mu = moments( shape, false );
         double hu[HU_MOMENTS_NUM];
         HuMoments(mu, hu);
 
@@ -92,9 +96,11 @@ hu_moments_t hu_moments_compute(Mat& src, const int canny_threshold)
         printf("\n");
         
         // We return Hu moments for the first contour of a given area
-        hu_moments_t hu_vector;
+        assert(hu);
         hu_vector.assign(hu, hu + HU_MOMENTS_NUM);
-        return hu_vector;
+        break;
     }
+
+    return hu_vector;
 }
 
