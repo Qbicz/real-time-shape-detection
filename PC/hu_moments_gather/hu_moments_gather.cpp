@@ -1,12 +1,13 @@
 #include <iostream>
+#include <fstream>
 #include <vector>
 
 #include <opencv2/highgui/highgui.hpp>
-#include "opencv2/imgproc/imgproc.hpp"
+#include <opencv2/imgproc/imgproc.hpp>
 
+#include <json.hpp>
 #include "print_vector.h"
 
-#define SHOW_IMAGES     1
 #define HU_MOMENTS_NUM  7
 
 using namespace cv;
@@ -20,18 +21,23 @@ int canny_threshold;
 const int threshold_ratio = 2;
 const int sobel_kernel_size = 3;
 
+int show_images_cli_arg = 0;
 
 int main(int argc, char** argv)
 {
     if(argc < 2)
     {
-        std::cout << "Usage: ./hu_moments_gather <input_image> <init_canny_threshold>\n";
+        std::cout << "Usage: ./hu_moments_gather <input_image> <init_canny_threshold> [show_images]\n";
         exit(1);
     }
 
     if(argc == 3)
     {
         canny_threshold = atoi(argv[2]);
+    }
+    elif(argc == 4)
+    {
+        show_images_cli_arg = atoi(argv[3]);
     }
 
     Mat src_image = imread(argv[1], 1);
@@ -79,8 +85,9 @@ hu_moments_t hu_moments_compute(Mat& src, const int canny_threshold)
         // Get shape by filling a contour
         fillPoly(shape, contour_vertices, vertices_num, 1, Scalar(255, 255, 255));
 
-        if(SHOW_IMAGES)
+        if(show_images_cli_arg)
         {
+            // Images displayed only when invoked with [show_images=1]
             imshow("Filled contour", shape);
             waitKey(0);
         }
