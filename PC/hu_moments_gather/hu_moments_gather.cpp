@@ -1,6 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
+#include <string>
 
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
@@ -11,6 +12,7 @@
 #define HU_MOMENTS_NUM  7
 
 using namespace cv;
+using json = nlohmann::json;
 
 // Type for Hu moments
 typedef std::vector<float> hu_moments_t;
@@ -25,27 +27,53 @@ int show_images_cli_arg = 0;
 
 int main(int argc, char** argv)
 {
-    if(argc < 2)
+    if(argc < 3)
     {
-        std::cout << "Usage: ./hu_moments_gather <input_image> <init_canny_threshold> [show_images]\n";
+        std::cout << "Usage: ./hu_moments_gather <input_images_list_file> <init_canny_threshold> [show_images]\n";
         exit(1);
     }
 
-    if(argc == 3)
+    if(argc >= 3)
     {
         canny_threshold = atoi(argv[2]);
     }
-    elif(argc == 4)
+    else if(argc == 4)
     {
         show_images_cli_arg = atoi(argv[3]);
     }
 
-    Mat src_image = imread(argv[1], 1);
-    hu_moments_t hu_moments = hu_moments_compute(src_image, canny_threshold);
+    // Read a list of images from file
+    std::vector<std::string> images_to_process;
+    std::ifstream images_list(argv[1]);
+    for (std::string line; std::getline(images_list, line); )
+    {
+        std::cout << "Adding image " << line << std::endl;
+        images_to_process.push_back(line);
+    }
 
-    std::cout << "Hu moments:" << std::endl;
-    print_vector(hu_moments);
-    
+    // For each image, extract Hu moments and add them to JSON array
+    auto json_objects = json::array();
+    for (std::string image_file : images_to_process)
+    {
+        Mat src_image = imread(image_file, 1);
+        hu_moments_t hu_moments = hu_moments_compute(src_image, canny_threshold);
+
+        std::cout << "Hu moments for image " << image_file << std::endl;
+        print_vector(hu_moments);
+
+        // Append object with Hu moments to json
+        // A human needs to fill in the "label" afterwards to prepare for learning the classifier
+        json hu_json;
+        hu_json["hu_moments"] = "blah"; // &hu_moments[0];
+        hu_json["label"] = 0;
+
+        json_objects.push_back(hu_json);
+    }
+    // Write to JSON file
+    std::ofstream output_training_data("../svm/data/dataset_training_hu_needs_label.json");
+
+    output_training_data << json_objects;
+
     return 0;
 }
 
