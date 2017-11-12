@@ -19,11 +19,13 @@ typedef std::vector<float> hu_moments_t;
 
 hu_moments_t hu_moments_compute(Mat& src, const int thresh);
 
-int canny_threshold;
 const int threshold_ratio = 2;
 const int sobel_kernel_size = 3;
 
-int show_images_cli_arg = 0;
+// CLI arguments
+int canny_threshold;         // required argument
+int show_images_cli_arg = 0; // optional argument: by default don't show images
+
 
 int main(int argc, char** argv)
 {
@@ -42,7 +44,7 @@ int main(int argc, char** argv)
         show_images_cli_arg = atoi(argv[3]);
     }
 
-    // Read a list of images from file
+    // Read a list of images from file. The list file has to be in the same folder as the program for the imported paths to be valid
     std::vector<std::string> images_to_process;
     std::ifstream images_list(argv[1]);
     for (std::string line; std::getline(images_list, line); )
@@ -56,6 +58,7 @@ int main(int argc, char** argv)
     for (std::string image_file : images_to_process)
     {
         Mat src_image = imread(image_file, 1);
+
         hu_moments_t hu_moments = hu_moments_compute(src_image, canny_threshold);
 
         std::cout << "Hu moments for image " << image_file << std::endl;
