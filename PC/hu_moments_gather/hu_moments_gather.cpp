@@ -39,9 +39,10 @@ int main(int argc, char** argv)
     {
         canny_threshold = atoi(argv[2]);
     }
-    else if(argc == 4)
+    if(argc == 4)
     {
         show_images_cli_arg = atoi(argv[3]);
+        std::cout << "Show images: " << (show_images_cli_arg ? "yes" : "no") << std::endl;
     }
 
     // Read a list of images from file. The list file has to be in the same folder as the program for the imported paths to be valid
