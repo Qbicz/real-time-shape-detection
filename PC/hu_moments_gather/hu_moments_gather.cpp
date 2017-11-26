@@ -76,6 +76,8 @@ int main(int argc, char** argv)
     std::ofstream output_training_data("../svm/data/dataset_training_hu_needs_label.json");
 
     output_training_data << json_objects;
+    std::cout << "Computed Hu moments and saved them to a JSON." << std::endl;
+    std::cout << "Please open the JSON and fill the labels for learning" << std::endl;
 
     return 0;
 }
