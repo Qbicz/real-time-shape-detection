@@ -76,6 +76,7 @@ int main(int argc, char** argv)
 
         std::cout << "Hu moments string: " << hu_moments_string << std::endl;
 
+        hu_json["image"] = image_file;
         hu_json["hu_moments"] = hu_moments_string;
         hu_json["label"] = 0;
 
@@ -101,7 +102,13 @@ hu_moments_t hu_moments_compute(Mat& src, const int canny_threshold)
     // Detect edges using Canny
     Mat edges_image;
     Canny(gray_image, edges_image, canny_threshold, canny_threshold*threshold_ratio, sobel_kernel_size);
-    
+
+    if(show_images_cli_arg)
+    {
+        // Images displayed only when invoked with [show_images=1]
+        imshow("Filled contour", edges_image);
+        waitKey(0);
+    }
     // Find all the contours in the thresholded image
     vector<Vec4i> hierarchy;
     vector<vector<Point> > contours;
