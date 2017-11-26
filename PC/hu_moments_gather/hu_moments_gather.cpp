@@ -71,7 +71,12 @@ int main(int argc, char** argv)
         // Append object with Hu moments to json
         // A human needs to fill in the "label" afterwards to prepare for learning the classifier
         json hu_json;
-        hu_json["hu_moments"] = "blah"; // &hu_moments[0];
+
+        std::string hu_moments_string = vector_to_string(hu_moments);
+
+        std::cout << "Hu moments string: " << hu_moments_string << std::endl;
+
+        hu_json["hu_moments"] = hu_moments_string;
         hu_json["label"] = 0;
 
         json_objects.push_back(hu_json);
