@@ -1,24 +1,31 @@
-CXX=g++
-CXXFLAGS= `pkg-config --libs opencv` -std=c++11
-# --cflags
-DEPS = 
-OBJ = capture.o
+ROOT_DIR=../..
 
-all: welcome clean capture
+CXX=g++
+CXXFLAGS= `pkg-config --libs opencv` -std=c++11 -I$(ROOT_DIR)/modules
+DEPS = 
+
+SRC = $(wildcard ./*.cpp) \
+      $(wildcard $(ROOT_DIR)/modules/*.cpp)
+OBJ = $(SRC:.cpp=.o)
+
+all: welcome clean hu_moments_gather
 	
 %.o: %.cpp $(DEPS)
 	@echo Compiling $< with $(CXX)...
 	$(CXX) -c -o $@ $< $(CXXFLAGS)
 
-capture: $(OBJ)
+hu_moments_gather: $(OBJ)
 	$(CXX) -o $@ $^ $(CXXFLAGS)
 
 clean:
 	rm -f *.o *~
+
+less:
+	less < <(all 2>&1)
 	
 welcome:
 	@echo ---------------------------------------
-	@echo ---------- WSW OpenCV PCA -------------
+	@echo ------- Compute Hu moments ------------
 	@echo ---------------------------------------
 	
 # (useful when debugging)

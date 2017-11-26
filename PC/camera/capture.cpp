@@ -1,6 +1,7 @@
 #include "opencv2/opencv.hpp"
 #include <stdio.h>
 #include <iostream>
+#include <string>
 
 using namespace std;
 using namespace cv;
@@ -12,10 +13,18 @@ double preprocessAndComputeOrientation(Mat& src, const int thresh = 140);
 void drawAxis(Mat&, Point, Point, Scalar, const float);
 double getOrientation(const vector<Point> &, Mat&);
 
+template <typename T>
+  std::string NumberToString ( T Number )
+  {
+     std::ostringstream ss;
+     ss << Number;
+     return ss.str();
+  }
+
 int main(int, char**)
 {
     printf("main starting\n");
-    VideoCapture cap(0); // open the default camera
+    VideoCapture cap(1); // open the default camera
     if(!cap.isOpened())  // check if we succeeded
     {
 	    printf("camera 0 not found!\n");
@@ -31,47 +40,16 @@ int main(int, char**)
     Mat gray;
     Mat src;
 
-    for(;;)
+    for(int frame_number = 0; ; frame_number++)
     {
         cap >> src; // get a new frame from camera
-        preprocessAndComputeOrientation(src);
-#if 0
+        //preprocessAndComputeOrientation(src);
+
         cvtColor(src, gray, COLOR_BGR2GRAY);
+    
+        std:string filename = "acorn_" + NumberToString(frame_number) + ".jpg";
+        imwrite(filename, gray);
 
-        //printf("Image captured and converted to grayscale!");
-
-        /// Convert image to binary
-        Mat bw;
-        //threshold(gray, bw, 50, 255, CV_THRESH_BINARY | CV_THRESH_OTSU);
-        /// Detect edges using canny
-        Canny( gray, bw, thresh, thresh*2, 3 );
-        imshow("bw", bw);
-        //! [contours]
-        // Find all the contours in the thresholded image
-        vector<Vec4i> hierarchy;
-        vector<vector<Point> > contours;
-        findContours(bw, contours, hierarchy, CV_RETR_LIST, CV_CHAIN_APPROX_NONE);
-
-        for (size_t i = 0; i < contours.size(); ++i)
-        //for (size_t i = 0; i < 5; ++i)
-        {
-            // Calculate the area of each contour
-            double area = contourArea(contours[i]);
-            // Ignore contours that are too small or too large
-            if (area < 1e3 || area > 1e6) continue;
-            // <Nokia 920 back>
-
-            printf("area = %f for contour %u\n", area, i);
-
-            // Draw each contour only for visualisation purposes
-            //printf("drawContours");
-            drawContours(src, contours, static_cast<int>(i), Scalar(0, 0, 255), 2, 8, hierarchy, 0);
-            // Find the orientation of each shape
-            //printf("getOrientation");
-            getOrientation(contours[i], src);
-        }
-        //! [contours]
-#endif
         /// Show in a window
         //imshow( "Contours", contours);
         imshow( "Orientation", src);

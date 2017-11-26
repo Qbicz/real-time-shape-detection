@@ -1,19 +1,24 @@
+ROOT_DIR=../../..
+
 CXX=g++
-CXXFLAGS= `pkg-config --libs opencv` -std=c++11
+CXXFLAGS= `pkg-config --libs opencv` -std=c++11 -I$(ROOT_DIR)/modules
 # --cflags
 DEPS = 
 INCLUDES = -I../includes
 OBJ = svm_train_and_save.o
 
+SRC = $(wildcard ./*.cpp) \
+      $(wildcard $(ROOT_DIR)/modules/*.cpp)
+OBJ = $(SRC:.cpp=.o)
 
 all: welcome clean svm_train_and_save
 	
 %.o: %.cpp $(DEPS)
 	@echo Compiling $< with $(CXX)...
-	$(CXX) -c $(INCLUDES) -o $@ $< $(CXXFLAGS)
+	$(CXX) -c -o $@ $< $(CXXFLAGS)
 
 svm_train_and_save: $(OBJ)
-	$(CXX) $(INCLUDES) -o $@ $^ $(CXXFLAGS)
+	$(CXX) -o $@ $^ $(CXXFLAGS)
 
 clean:
 	rm -f *.o *~
