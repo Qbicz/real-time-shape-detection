@@ -41,3 +41,9 @@ mali_drivers
 *.avi
 *.jpg
 
+# Ignore files without extensions - but we should place compilation output in _build
+*       # tells git to ignore everything.
+!*/     # then unignores anything that is a directory. This is crucial.
+!*.*    # unignores all files with an extension.
+!Makefile
+
