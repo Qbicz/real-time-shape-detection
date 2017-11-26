@@ -17,10 +17,13 @@ using json = nlohmann::json;
 // Type for Hu moments
 typedef std::vector<float> hu_moments_t;
 
-hu_moments_t hu_moments_compute(Mat& src, const int thresh);
+// Functions
+static hu_moments_t hu_moments_compute(Mat& src, const int thresh);
 
+// Configuration constants
 const int threshold_ratio = 2;
 const int sobel_kernel_size = 3;
+const std::string output_json_file = "../svm/data/dataset_training_hu_needs_label.json";
 
 // CLI arguments
 int canny_threshold;         // required argument
@@ -74,7 +77,7 @@ int main(int argc, char** argv)
         json_objects.push_back(hu_json);
     }
     // Write to JSON file
-    std::ofstream output_training_data("../svm/data/dataset_training_hu_needs_label.json");
+    std::ofstream output_training_data(output_json_file);
 
     output_training_data << json_objects;
     std::cout << "Computed Hu moments and saved them to a JSON." << std::endl;
