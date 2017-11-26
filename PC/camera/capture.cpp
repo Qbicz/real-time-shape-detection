@@ -89,6 +89,7 @@ int main(int, char**)
 
 double preprocessAndComputeOrientation(Mat& src, const int thresh)
 {
+#if 0
     // Return value
     double angle;
 
@@ -169,6 +170,7 @@ double preprocessAndComputeOrientation(Mat& src, const int thresh)
 
 
     return angle;
+#endif
 }
 
 
