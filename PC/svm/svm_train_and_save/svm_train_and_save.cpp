@@ -8,7 +8,7 @@
 
 #include "print_vector.h"
 
-#define DATA_DIMENSIONS 2 // for Hu moments, it will be 7
+#define DATA_DIMENSIONS 7 // there are 7 Hu moments
 
 using namespace cv;
 using json = nlohmann::json;
@@ -17,15 +17,14 @@ static std::vector<float> svm_build_single_element(json &element)
 {
     std::vector<float> training_element;
     std::cout << "element: " << element << std::endl; 
-    training_element.push_back(element["x"]);
-    training_element.push_back(element["y"]);
+    training_element.push_back(element["hu"]);
     return training_element;
 }
 
 int main()
 {
     // Read input training data to JSON object
-    std::ifstream input_training_data("../data/dataset_training.json");
+    std::ifstream input_training_data("../data/dataset_training_labeled_canny150.json");
     json training_data_json;
     input_training_data >> training_data_json;
  
@@ -38,6 +37,17 @@ int main()
 
     for (auto element : training_data_json)
     {
+        // Ignore not labeled elements
+        if (element["label"] == 0)
+        {
+            continue;
+        }
+        else
+        {
+            // Read training label
+            labels.push_back(element["label"]);
+        }
+
         // Read training data
         std::vector<float> training_element = svm_build_single_element(element);
         // Put new element at the end of vector containing all data
@@ -46,9 +56,6 @@ int main()
                              training_element.end()
                             );
         print_vector(training_data);
-
-        // Read training label
-        labels.push_back(element["label"]);
     }
 
     // Create a matrix from vector and reshape matrix to have one training element in one row
