@@ -1,0 +1,242 @@
+[
+    {
+        "hu_moments": "0.000847146,3.26399e-07,7.86756e-13,1.8909e-13,7.26918e-26,1.06442e-16,-5.92494e-27",
+        "image": "../img/acorn-learning/acorn_2019.jpg",
+        "label": -1
+    },
+    {
+        "hu_moments": "",
+        "image": "../img/acorn-learning/acorn_2022.jpg",
+        "label": 0
+    },
+    {
+        "hu_moments": "0.000840619,3.14393e-07,1.69508e-12,3.3371e-13,2.46053e-25,1.77973e-16,-4.95156e-26",
+        "image": "../img/acorn-learning/acorn_2110.jpg",
+        "label": 1
+    },
+    {
+        "hu_moments": "",
+        "image": "../img/acorn-learning/acorn_866.jpg",
+        "label": 0
+    },
+    {
+        "hu_moments": "",
+        "image": "../img/acorn-learning/acorn_2115.jpg",
+        "label": 0
+    },
+    {
+        "hu_moments": "0.000842219,3.1831e-07,1.08665e-12,2.45967e-13,1.22982e-25,1.24095e-16,-3.23414e-26",
+        "image": "../img/acorn-learning/acorn_2225.jpg",
+        "label": -1
+    },
+    {
+        "hu_moments": "",
+        "image": "../img/acorn-learning/acorn_1500.jpg",
+        "label": 0
+    },
+    {
+        "hu_moments": "",
+        "image": "../img/acorn-learning/acorn_1061.jpg",
+        "label": 0
+    },
+    {
+        "hu_moments": "",
+        "image": "../img/acorn-learning/acorn_1595.jpg",
+        "label": 0
+    },
+    {
+        "hu_moments": "",
+        "image": "../img/acorn-learning/acorn_1596.jpg",
+        "label": 0
+    },
+    {
+        "hu_moments": "",
+        "image": "../img/acorn-learning/acorn_1915.jpg",
+        "label": 0
+    },
+    {
+        "hu_moments": "",
+        "image": "../img/acorn-learning/acorn_1679.jpg",
+        "label": 0
+    },
+    {
+        "hu_moments": "",
+        "image": "../img/acorn-learning/acorn_1484.jpg",
+        "label": 0
+    },
+    {
+        "hu_moments": "",
+        "image": "../img/acorn-learning/acorn_1486.jpg",
+        "label": 0
+    },
+    {
+        "hu_moments": "0.000688867,8.44565e-08,5.39677e-13,2.58498e-14,1.4405e-27,1.8922e-18,-2.69201e-27",
+        "image": "../img/acorn-learning/acorn_1593.jpg",
+        "label": 1
+    },
+    {
+        "hu_moments": "",
+        "image": "../img/acorn-learning/acorn_1588.jpg",
+        "label": 0
+    },
+    {
+        "hu_moments": "",
+        "image": "../img/acorn-learning/acorn_1501.jpg",
+        "label": 0
+    },
+    {
+        "hu_moments": "0.000726841,1.38028e-07,1.52978e-13,9.11481e-15,3.95725e-29,-7.0357e-19,3.38049e-28",
+        "image": "../img/acorn-learning/acorn_1498.jpg",
+        "label": 1
+    },
+    {
+        "hu_moments": "0.000720237,1.28889e-07,2.08247e-13,1.12577e-14,1.30717e-29,-8.35903e-19,5.4493e-28",
+        "image": "../img/acorn-learning/acorn_1676.jpg",
+        "label": -1
+    },
+    {
+        "hu_moments": "",
+        "image": "../img/acorn-learning/acorn_1485.jpg",
+        "label": 0
+    },
+    {
+        "hu_moments": "",
+        "image": "../img/acorn-learning/acorn_1063.jpg",
+        "label": 0
+    },
+    {
+        "hu_moments": "0.000826638,2.91295e-07,1.46087e-12,2.46356e-13,1.42464e-25,1.20824e-16,-3.93256e-26",
+        "image": "../img/acorn-learning/acorn_2021.jpg",
+        "label": -1
+    },
+    {
+        "hu_moments": "0.000708964,1.12643e-07,3.22703e-13,1.33816e-14,-2.82959e-28,-2.17235e-18,-8.3259e-28",
+        "image": "../img/acorn-learning/acorn_1592.jpg",
+        "label": 1
+    },
+    {
+        "hu_moments": "",
+        "image": "../img/acorn-learning/acorn_2230.jpg",
+        "label": 0
+    },
+    {
+        "hu_moments": "",
+        "image": "../img/acorn-learning/acorn_963.jpg",
+        "label": 0
+    },
+    {
+        "hu_moments": "",
+        "image": "../img/acorn-learning/acorn_1675.jpg",
+        "label": 0
+    },
+    {
+        "hu_moments": "",
+        "image": "../img/acorn-learning/acorn_863.jpg",
+        "label": 0
+    },
+    {
+        "hu_moments": "",
+        "image": "../img/acorn-learning/acorn_1062.jpg",
+        "label": 0
+    },
+    {
+        "hu_moments": "",
+        "image": "../img/acorn-learning/acorn_1577.jpg",
+        "label": 0
+    },
+    {
+        "hu_moments": "",
+        "image": "../img/acorn-learning/acorn_962.jpg",
+        "label": 0
+    },
+    {
+        "hu_moments": "0.000842755,3.18637e-07,1.30744e-12,1.00884e-13,-1.57479e-26,-3.44397e-17,-3.30823e-26",
+        "image": "../img/acorn-learning/acorn_1909.jpg",
+        "label": 1
+    },
+    {
+        "hu_moments": "0.000809013,2.63734e-07,3.21082e-13,5.60651e-14,7.51861e-27,2.87061e-17,-2.33429e-28",
+        "image": "../img/acorn-learning/acorn_2023.jpg",
+        "label": -1
+    },
+    {
+        "hu_moments": "0.000849392,3.30539e-07,2.95272e-13,7.30146e-14,1.07e-26,4.18664e-17,6.66187e-28",
+        "image": "../img/acorn-learning/acorn_2018.jpg",
+        "label": -1
+    },
+    {
+        "hu_moments": "0.000826975,2.92116e-07,2.08064e-12,1.37851e-13,-6.57699e-26,-6.93139e-17,-3.35362e-26",
+        "image": "../img/acorn-learning/acorn_1913.jpg",
+        "label": 1
+    },
+    {
+        "hu_moments": "",
+        "image": "../img/acorn-learning/acorn_2114.jpg",
+        "label": 0
+    },
+    {
+        "hu_moments": "",
+        "image": "../img/acorn-learning/acorn_1058.jpg",
+        "label": 0
+    },
+    {
+        "hu_moments": "",
+        "image": "../img/acorn-learning/acorn_2229.jpg",
+        "label": 0
+    },
+    {
+        "hu_moments": "",
+        "image": "../img/acorn-learning/acorn_1502.jpg",
+        "label": 0
+    },
+    {
+        "hu_moments": "0.000824302,2.88515e-07,6.55739e-13,4.83077e-14,-3.21094e-27,-1.37991e-17,-7.97579e-27",
+        "image": "../img/acorn-learning/acorn_2112.jpg",
+        "label": 1
+    },
+    {
+        "hu_moments": "",
+        "image": "../img/acorn-learning/acorn_1673.jpg",
+        "label": 0
+    },
+    {
+        "hu_moments": "",
+        "image": "../img/acorn-learning/acorn_964.jpg",
+        "label": 0
+    },
+    {
+        "hu_moments": "",
+        "image": "../img/acorn-learning/acorn_1590.jpg",
+        "label": 0
+    },
+    {
+        "hu_moments": "0.000721565,1.30349e-07,2.02538e-13,1.32965e-14,3.63342e-28,1.58421e-18,-5.86603e-28",
+        "image": "../img/acorn-learning/acorn_1678.jpg",
+        "label": -1
+    },
+    {
+        "hu_moments": "0.000840923,3.1573e-07,1.50483e-12,1.2976e-13,-6.17278e-27,-2.71948e-17,-5.70067e-26",
+        "image": "../img/acorn-learning/acorn_1911.jpg",
+        "label": 1
+    },
+    {
+        "hu_moments": "",
+        "image": "../img/acorn-learning/acorn_960.jpg",
+        "label": 0
+    },
+    {
+        "hu_moments": "0.000826998,2.92439e-07,1.18298e-12,2.40108e-13,1.2697e-25,1.26297e-16,-1.59457e-26",
+        "image": "../img/acorn-learning/acorn_2020.jpg",
+        "label": -1
+    },
+    {
+        "hu_moments": "",
+        "image": "../img/acorn-learning/acorn_1914.jpg",
+        "label": 0
+    },
+    {
+        "hu_moments": "0.000840845,3.15803e-07,5.69914e-13,8.08418e-14,1.29154e-26,2.41601e-17,-1.15887e-26",
+        "image": "../img/acorn-learning/acorn_2111.jpg",
+        "label": 1
+    }
+]
