@@ -34,3 +34,21 @@ std::string vector_to_string(std::vector<float> &vect)
         return "";
     }
 }
+
+std::vector<float> string_to_vector(std::string str)
+{
+    std::vector<float> vect;
+    std::stringstream ss(str);
+    float i;
+
+    while (ss >> i)
+    {
+        vect.push_back(i);
+
+        if (ss.peek() == ',' || ss.peek() == ' ')
+            ss.ignore();
+    }
+
+    return vect;
+}
+
