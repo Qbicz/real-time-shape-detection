@@ -2,30 +2,11 @@
 #define COMMON_H
 
 #include "json.hpp"
+#include "print_vector.h"
 
-#define DATA_DIMENSIONS 2 // for Hu moments, it will be 7
+#define DATA_DIMENSIONS 7 // for Hu moments, it will be 7
 
-using json =nlohmann::json;
-
-std::vector<float> svm_build_single_element(json &element, bool debug = false)
-{
-    std::vector<float> training_element;
-    if(debug)
-        std::cout << "element: " << element << std::endl; 
-    training_element.push_back(element["x"]);
-    training_element.push_back(element["y"]);
-    return training_element;
-}
-
-void print_vector(std::vector<float> &vect)
-{
-    std::cout << "std::vector [ ";
-    for (auto vect_elem : vect)
-    {
-        std::cout << vect_elem << " ";
-    }
-    std::cout << "]\n";
-}
+using json = nlohmann::json;
 
 cv::Mat prepare_data_mat(const nlohmann::json& test_data_json)
 {
@@ -35,7 +16,7 @@ cv::Mat prepare_data_mat(const nlohmann::json& test_data_json)
     for (auto element : test_data_json)
     {
         // Read test data
-        std::vector<float> training_element = svm_build_single_element(element);
+        std::vector<float> training_element = string_to_vector(element["hu_moments"]);
         // Put new element at the end of vector containing all data
         training_data.insert(training_data.end(),
                              training_element.begin(),
