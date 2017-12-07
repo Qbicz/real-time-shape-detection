@@ -4,7 +4,7 @@
 #include "json.hpp"
 #include "print_vector.h"
 
-#define DATA_DIMENSIONS 7 // for Hu moments, it will be 7
+const unsigned int DATA_DIMENSIONS = 7; // for Hu moments, it will be 7
 
 using json = nlohmann::json;
 
@@ -14,7 +14,7 @@ std::vector<int> svm_read_labels_from_json(const json& data_json)
     size_t labeled_dataset_size = 0;
 
     // For each acorn read its learning label
-    for (auto element : data_json)
+    for (const auto& element : data_json)
     {
         // Ignore not labeled elements
         if (element["label"] == 0)
@@ -44,7 +44,7 @@ cv::Mat svm_read_data_from_json(const json& data_json)
     size_t labeled_dataset_size = 0;
 
     // For each acorn read its Hu moments
-    for (auto element : data_json)
+    for (const auto& element : data_json)
     {
         // Ignore not labeled elements
         if (element["label"] == 0)
