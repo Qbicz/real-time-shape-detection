@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
     }
 
     // Read input training data to JSON object
-    std::ifstream test_data("../data/dataset_test.json");
+    std::ifstream test_data("../data/dataset_training_labeled_canny150.json"); // for now use training dataset, it should give 100% accuracy
     json test_data_json;
     test_data >> test_data_json;
 

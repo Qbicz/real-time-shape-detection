@@ -1,9 +1,11 @@
+ROOT_DIR=../../..
+
 CXX=g++
 CXXFLAGS= `pkg-config --cflags opencv` -std=c++11
 LDLIBS= `pkg-config --libs opencv`
 # --cflags
 DEPS = 
-INCLUDES = -I../includes -I../../../modules
+INCLUDES = -I../includes -I$(ROOT_DIR)/modules
 OBJ = svm_test.o
 
 
