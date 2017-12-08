@@ -4,7 +4,7 @@
 #include <iterator>
 #include "print_vector.h"
 
-void print_vector(std::vector<float> &vect)
+void print_vector(const std::vector<float> &vect)
 {
     std::cout << "std::vector [ ";
     for (auto vect_elem : vect)
@@ -14,7 +14,7 @@ void print_vector(std::vector<float> &vect)
     std::cout << "]\n";
 }
 
-std::string vector_to_string(std::vector<float> &vect)
+std::string vector_to_string(const std::vector<float>& vect)
 {
     std::ostringstream oss;
 
@@ -34,3 +34,21 @@ std::string vector_to_string(std::vector<float> &vect)
         return "";
     }
 }
+
+std::vector<float> string_to_vector(const std::string& str)
+{
+    std::vector<float> vect;
+    std::stringstream ss(str);
+    float i;
+
+    while (ss >> i)
+    {
+        vect.push_back(i);
+
+        if (ss.peek() == ',' || ss.peek() == ' ')
+            ss.ignore();
+    }
+
+    return vect;
+}
+

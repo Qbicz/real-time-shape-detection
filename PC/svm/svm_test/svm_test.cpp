@@ -4,6 +4,7 @@
 #include <fstream>
 
 #include "common.h"
+#include "print_vector.cpp"
 
 //see https://docs.opencv.org/2.4/modules/ml/doc/support_vector_machines.html#cvsvm-predict for reference
 
@@ -25,18 +26,18 @@ int main(int argc, char* argv[])
     svm.load(svmFile.c_str());
 
     std::cout << "SUCCESS!\n";
-    
+
     for (int i = 0; i < svm.get_support_vector_count(); ++i)
     {
         auto v = svm.get_support_vector(i);
         std::cout << "Support vector #" << i << " " << *v << "\n";
     }
 
-// Read input training data to JSON object
-    std::ifstream test_data("../data/dataset_test.json");
+    // Read input training data to JSON object
+    std::ifstream test_data("../data/dataset_training_labeled_canny150.json"); // for now use training dataset, it should give 100% accuracy
     json test_data_json;
     test_data >> test_data_json;
-    
+
     std::cout << "Test points: " << test_data_json.size() << "\n";
     std::cout << "Testing trained svm... ";
     std::cout << (test_svm_with_data(svm, test_data_json) ? "OK" : "NOT OK") << std::endl;

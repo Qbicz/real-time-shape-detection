@@ -1,8 +1,11 @@
+ROOT_DIR=../../..
+
 CXX=g++
-CXXFLAGS= `pkg-config --libs opencv` -std=c++11
+CXXFLAGS= `pkg-config --cflags opencv` -std=c++11
+LDLIBS= `pkg-config --libs opencv`
 # --cflags
 DEPS = 
-INCLUDES = -I../includes
+INCLUDES = -I../includes -I$(ROOT_DIR)/modules
 OBJ = svm_test.o
 
 
@@ -13,7 +16,7 @@ all: welcome clean svm_test
 	$(CXX) -c $(INCLUDES) -o $@ $< $(CXXFLAGS)
 
 svm_test:	$(OBJ)
-	$(CXX) $(INCLUDES) -o $@ $^ $(CXXFLAGS)
+	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDLIBS)
 
 clean:
 	rm -f *.o *~
