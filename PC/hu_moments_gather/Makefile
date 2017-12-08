@@ -1,7 +1,8 @@
 ROOT_DIR=../..
 
 CXX=g++
-CXXFLAGS= `pkg-config --libs opencv` -std=c++11 -I$(ROOT_DIR)/modules
+CXXFLAGS= -std=c++11 -I$(ROOT_DIR)/modules `pkg-config --cflags opencv` -I$(ROOT_DIR)/PC/svm/includes/
+LDLIBS= `pkg-config --libs opencv`
 DEPS = 
 
 SRC = $(wildcard ./*.cpp) \
@@ -15,7 +16,7 @@ all: welcome clean hu_moments_gather
 	$(CXX) -c -o $@ $< $(CXXFLAGS)
 
 hu_moments_gather: $(OBJ)
-	$(CXX) -o $@ $^ $(CXXFLAGS)
+	$(CXX) -o $@ $^ $(LDLIBS)
 
 clean:
 	rm -f *.o *~
