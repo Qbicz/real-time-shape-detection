@@ -77,10 +77,15 @@ cv::Mat svm_read_data_from_json(const json& data_json)
 bool test_svm_with_data(const CvSVM& svm, const json& test_data_json)
 {
     const cv::Mat test_data_mat = svm_read_data_from_json(test_data_json);
+    const std::vector<int> labels = svm_read_labels_from_json(test_data_json);
+    bool is_result_correct = true;
+    unsigned int correct_count = 0;
+    unsigned int total_count = labels.size();
 
-    for(auto  i = 0; i < test_data_mat.rows; ++i)
+    for(auto i = 0; i < test_data_mat.rows; ++i)
     {
-        int expected = test_data_json[i]["label"];
+        int expected = labels[i];
+        std::cout << "expected: " << labels[i] << std::endl;
         int predicted = svm.predict(test_data_mat.row(i));
 
         if(expected != predicted)
@@ -88,10 +93,18 @@ bool test_svm_with_data(const CvSVM& svm, const json& test_data_json)
             std::cout << "Incorrect result at row " << i << " with data: "
                       << test_data_mat.row(i) << "\n";
             std::cout << "Predicted: " << predicted << " expected: " << expected << "\n";
-            return false;
+            is_result_correct = false;
+        }
+        else
+        {
+            correct_count++;
         }
     }
-    return true;
+
+    float accuracy = static_cast<float>(correct_count) / static_cast<float>(total_count);
+    std::cout << "SVM recognition accuracy: " << 100*accuracy << "%" << std::endl;
+
+    return is_result_correct;
 }
 
 #endif
