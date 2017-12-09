@@ -9,7 +9,7 @@ SRC = $(wildcard ./*.cpp) \
       $(wildcard $(ROOT_DIR)/modules/*.cpp)
 OBJ = $(SRC:.cpp=.o)
 
-all: welcome clean hu_moments_gather
+all: welcome hu_moments_gather
 	
 %.o: %.cpp $(DEPS)
 	@echo Compiling $< with $(CXX)...
