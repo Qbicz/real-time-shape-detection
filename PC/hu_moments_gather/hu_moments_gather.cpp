@@ -51,11 +51,14 @@ int main(int argc, char** argv)
     // Read a list of images from file. The list file has to be in the same folder as the program for the imported paths to be valid
     std::vector<std::string> images_to_process;
     std::ifstream images_list(argv[1]);
+
+    std::cout << "Adding images ";
     for (std::string line; std::getline(images_list, line); )
     {
-        std::cout << "Adding image " << line << std::endl;
         images_to_process.push_back(line);
+        std::cout << " " << line;
     }
+    std::cout << '\n';
 
     // For each image, extract Hu moments and add them to JSON array
     auto json_objects = json::array();
@@ -65,7 +68,6 @@ int main(int argc, char** argv)
 
         hu_moments_t hu_moments = hu_moments_compute(src_image, canny_threshold);
 
-        std::cout << "Hu moments for image " << image_file << std::endl;
         print_vector(hu_moments);
 
         // Append object with Hu moments to json
@@ -74,7 +76,7 @@ int main(int argc, char** argv)
 
         std::string hu_moments_string = vector_to_string(hu_moments);
 
-        std::cout << "Hu moments string: " << hu_moments_string << std::endl;
+        std::cout << image_file << " ->  Hu moments string: " << hu_moments_string << std::endl;
 
         hu_json["image"] = image_file;
         hu_json["hu_moments"] = hu_moments_string;
@@ -90,6 +92,34 @@ int main(int argc, char** argv)
     std::cout << "Please open the JSON and fill the labels for learning" << std::endl;
 
     return 0;
+}
+
+vector<Point> largestContourConvexHull(const vector<vector<Point> >& contours )
+{
+    vector<Point> result, pts;
+    std::pair<double, vector<Point>> maxArea;
+
+    for ( size_t i = 0; i < contours.size(); i++)
+    {
+        vector<Point> tmpPts;
+        for ( size_t j = 0; j< contours[i].size(); j++)
+        {
+            tmpPts.push_back(contours[i][j]);
+            pts.push_back(contours[i][j]);
+        }
+
+        auto contourAreaSize = contourArea(tmpPts);
+
+        if(contourAreaSize > maxArea.first)
+        {
+            maxArea.first = contourAreaSize;
+            maxArea.second = tmpPts;
+        }
+    }
+
+//  Calculate for the largest contour only
+    convexHull(maxArea.second, result );
+    return result;
 }
 
 hu_moments_t hu_moments_compute(Mat& src, const int canny_threshold)
@@ -118,10 +148,23 @@ hu_moments_t hu_moments_compute(Mat& src, const int canny_threshold)
     {
         // Calculate the area of each contour
         double area = contourArea(contours[i]);
-        // Ignore contours that are too small or too large
-        if (area < 1e3 || area > 1e7) continue;
+        // Fix contours that are too small or too large
+        if (area < 1e3 || area > 1e7)
+        {
+            std::cout << "Area too small for contour, trying convex hull...\n";
 
-        printf("area = %f for contour %lu\n", area, i);
+            vector<Point> convexHullPoints =  largestContourConvexHull(contours);
+
+            contours[i] = convexHullPoints;
+            area = contourArea(contours[i]);
+            if (area < 1e3 || area > 1e7)
+            {
+                std::cout << "Failed to set the convex hull!\n";
+                continue;
+            }
+        }
+
+        std::cout << "area = " << area << " for contour " << i << '\n';
 
         /* Prepare empty image on which the shape will be drawn.
            The image will be used by cv::moments() and thus has to be
