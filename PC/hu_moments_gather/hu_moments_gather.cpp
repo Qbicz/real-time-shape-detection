@@ -109,9 +109,6 @@ vector<Point> largestContourConvexHull(const vector<vector<Point> >& contours )
         }
 
         auto contourAreaSize = contourArea(tmpPts);
-//        auto contourLength = arcLength(tmpPts, false); //false indicates it is not closed curve
-//        std::cout << "Area: " << contourAreaSize << '\n';
-//        std::cout << "Length " << contourLength << '\n';
 
         if(contourAreaSize > maxArea.first)
         {
@@ -120,7 +117,7 @@ vector<Point> largestContourConvexHull(const vector<vector<Point> >& contours )
         }
     }
 
-//    Calculate for the largest contour only
+//  Calculate for the largest contour only
     convexHull(maxArea.second, result );
     return result;
 }
