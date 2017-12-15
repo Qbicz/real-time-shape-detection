@@ -5,6 +5,7 @@
 
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/core/core.hpp>
 
 #include <json.hpp>
 #include "print_vector.h"
@@ -28,29 +29,35 @@ const std::string output_json_file = "../svm/data/dataset_training_hu_needs_labe
 // CLI arguments
 int canny_threshold;         // required argument
 int show_images_cli_arg = 0; // optional argument: by default don't show images
-
+int upper_canny_threshold;
 
 int main(int argc, char** argv)
 {
-    if(argc < 3)
+    const char* keys = {
+        "{h | help  | false | print this message     }"
+        "{i | input |       | input images list file }"
+        "{l | lower | 150   | lower canny threshold  }"
+        "{u | upper | 300   | upper canny threshold  }"
+        "{s | show  | false | show images  }"
+    };
+
+    CommandLineParser parser(argc, argv, keys);
+
+    if( argc < 2 || parser.get<bool>("help"))
     {
-        std::cout << "Usage: ./hu_moments_gather <input_images_list_file> <init_canny_threshold> [show_images]\n";
+        parser.printParams();
         exit(1);
     }
 
-    if(argc >= 3)
-    {
-        canny_threshold = atoi(argv[2]);
-    }
-    if(argc == 4)
-    {
-        show_images_cli_arg = atoi(argv[3]);
-        std::cout << "Show images: " << (show_images_cli_arg ? "yes" : "no") << std::endl;
-    }
+    canny_threshold = parser.get<int>("lower");
+    upper_canny_threshold = parser.get<int>("upper");
+    show_images_cli_arg = parser.get<bool>("show");
+
+    std::cout << "Show images: " << (show_images_cli_arg ? "yes" : "no") << std::endl;
 
     // Read a list of images from file. The list file has to be in the same folder as the program for the imported paths to be valid
     std::vector<std::string> images_to_process;
-    std::ifstream images_list(argv[1]);
+    std::ifstream images_list(parser.get<std::string>("input"));
 
     std::cout << "Adding images ";
     for (std::string line; std::getline(images_list, line); )
