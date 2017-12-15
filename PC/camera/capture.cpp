@@ -25,16 +25,27 @@ int main(int, char**)
 {
     printf("main starting\n");
     VideoCapture cap(1); // open the default camera
+
+    // settings
+    cap.set(CV_CAP_PROP_FRAME_WIDTH, 1200);
+    cap.set(CV_CAP_PROP_FRAME_HEIGHT, 720);
+
+
+    std::cout << "Set width: " << cap.set(CV_CAP_PROP_FRAME_WIDTH, 1200) << std::endl;
+    std::cout << "Set height: " << cap.set(CV_CAP_PROP_FRAME_HEIGHT, 720) << std::endl;
+
+
+
     if(!cap.isOpened())  // check if we succeeded
     {
 	    printf("camera 0 not found!\n");
 	    return -1;
     }
     printf("Camera opened!");
-    
+
 #if 0
     double fps = cap.get(CV_CAP_PROP_FPS);
-    printf("FPS = %f\n", fps);    
+    printf("FPS = %f\n", fps);
 #endif
 
     Mat gray;
@@ -46,8 +57,8 @@ int main(int, char**)
         //preprocessAndComputeOrientation(src);
 
         cvtColor(src, gray, COLOR_BGR2GRAY);
-    
-        std:string filename = "acorn_" + NumberToString(frame_number) + ".jpg";
+
+        std:string filename = "acorn_" + NumberToString(frame_number) + ".png";
         imwrite(filename, gray);
 
         /// Show in a window
