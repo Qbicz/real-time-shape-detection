@@ -52,12 +52,19 @@ int main(int argc, char** argv)
     CvSVMParams params;
     params.svm_type    = CvSVM::C_SVC;
     params.kernel_type = CvSVM::LINEAR;
-    params.term_crit   = cvTermCriteria(CV_TERMCRIT_ITER, 100, 1e-6);
+    params.term_crit   = cvTermCriteria(CV_TERMCRIT_ITER, 500, 1e-6);
 
     // Train the SVM
-    CvSVM SVM;
-    SVM.train(training_data_mat, labels_mat, Mat(), Mat(), params);
+    CvSVM svm;
+    svm.train(training_data_mat, labels_mat, Mat(), Mat(), params);
 
-    SVM.save("trained.svm");
+    svm.save("trained.svm");
+
+    std::cout << "Information about trained SVM:" << std::endl;
+    for (int i = 0; i < svm.get_support_vector_count(); ++i)
+    {
+        auto v = svm.get_support_vector(i);
+        std::cout << "Support vector #" << i << " " << *v << "\n";
+    }
 }
 
