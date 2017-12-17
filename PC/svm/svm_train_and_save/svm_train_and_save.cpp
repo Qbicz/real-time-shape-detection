@@ -22,7 +22,7 @@ int main(int argc, char** argv)
     if(argc < 2)
     {
         std::cout << "Usage: ./svm_train_and_save <input_json_training_data>" << std::endl;
-        std::cout << "Example: ./svm_train_and_save ../data/dataset_training_labeled_canny150.json" << std::endl;
+        std::cout << "Example: ./svm_train_and_save ../data/dataset_training_labeled_absdiff_kernel5.json" << std::endl;
         exit(1);
     }
     if(argc >= 2)

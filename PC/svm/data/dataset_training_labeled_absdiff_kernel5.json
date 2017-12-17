@@ -152,7 +152,7 @@
     {
         "hu_moments": "",
         "image": "../img/acorn-c525-learning/acorn_2666.png",
-        "label": -1
+        "label": 0
     },
     {
         "hu_moments": "0.000811369,2.67214e-07,2.15213e-12,3.11616e-13,2.07433e-25,9.55101e-17,-1.48638e-25",
@@ -352,7 +352,7 @@
     {
         "hu_moments": "",
         "image": "../img/acorn-c525-learning/acorn_853.png",
-        "label": 1
+        "label": 0
     },
     {
         "hu_moments": "0.000796232,2.43885e-07,2.05207e-13,1.89668e-14,4.75145e-28,4.13863e-19,1.08369e-27",
