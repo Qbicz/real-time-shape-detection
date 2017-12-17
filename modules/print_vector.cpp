@@ -2,6 +2,7 @@
 #include <sstream>
 #include <vector>
 #include <iterator>
+#include <algorithm>
 #include "print_vector.h"
 
 void print_vector(const std::vector<float> &vect)
@@ -50,5 +51,19 @@ std::vector<float> string_to_vector(const std::string& str)
     }
 
     return vect;
+}
+
+std::vector<float> vector_subset(const std::vector<float>& vect, std::vector<int> chosen_indexes)
+{
+    std::vector<float> new_vect;
+
+    std::sort(chosen_indexes.begin(), chosen_indexes.end());
+
+    for (auto index : chosen_indexes)
+    {
+        new_vect.push_back(vect[index]);
+    }
+
+    return new_vect;
 }
 
