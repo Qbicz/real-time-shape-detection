@@ -19,17 +19,17 @@ using json = nlohmann::json;
 typedef std::vector<float> hu_moments_t;
 
 // Functions
-static hu_moments_t hu_moments_compute(Mat& src, const int thresh);
+static hu_moments_t hu_moments_compute(const Mat& src, const int canny_threshold, const int upper_threshold);
 
 // Configuration constants
-const int threshold_ratio = 2;
-const int sobel_kernel_size = 3;
 const std::string output_json_file = "../svm/data/dataset_training_hu_needs_label.json";
 
 // CLI arguments
 int canny_threshold;         // required argument
 int show_images_cli_arg = 0; // optional argument: by default don't show images
 int upper_canny_threshold;
+int sobel_kernel_size;
+
 
 int main(int argc, char** argv)
 {
@@ -38,6 +38,7 @@ int main(int argc, char** argv)
         "{i | input |       | input images list file }"
         "{l | lower | 150   | lower canny threshold  }"
         "{u | upper | 300   | upper canny threshold  }"
+        "{k | kernel| 3     | sobel kernel size  }"
         "{s | show  | false | show images  }"
     };
 
@@ -51,6 +52,7 @@ int main(int argc, char** argv)
 
     canny_threshold = parser.get<int>("lower");
     upper_canny_threshold = parser.get<int>("upper");
+    sobel_kernel_size = parser.get<int>("kernel");
     show_images_cli_arg = parser.get<bool>("show");
 
     std::cout << "Show images: " << (show_images_cli_arg ? "yes" : "no") << std::endl;
@@ -73,7 +75,7 @@ int main(int argc, char** argv)
     {
         Mat src_image = imread(image_file, 1);
 
-        hu_moments_t hu_moments = hu_moments_compute(src_image, canny_threshold);
+        hu_moments_t hu_moments = hu_moments_compute(src_image, canny_threshold, upper_canny_threshold);
 
         print_vector(hu_moments);
 
@@ -129,23 +131,33 @@ vector<Point> largestContourConvexHull(const vector<vector<Point> >& contours )
     return result;
 }
 
-hu_moments_t hu_moments_compute(Mat& src, const int canny_threshold)
+hu_moments_t hu_moments_compute(const Mat& src, const int canny_threshold, const int upper_threshold)
 {
     hu_moments_t hu_vector;
 
-    Mat gray_image;
+    Mat gray_image, gray_bg;
     cvtColor(src, gray_image, COLOR_BGR2GRAY);
+
+    Mat bg = imread("bg.png");
+    cvtColor(bg, gray_bg, COLOR_BGR2GRAY);
+
+    Mat diff(gray_image);
+    absdiff(gray_image, gray_bg, diff);
 
     // Detect edges using Canny
     Mat edges_image;
-    Canny(gray_image, edges_image, canny_threshold, canny_threshold*threshold_ratio, sobel_kernel_size);
+    Canny(diff, edges_image, canny_threshold, upper_threshold, sobel_kernel_size);
+//    Canny(gray_image, edges_image, canny_threshold, upper_threshold, sobel_kernel_size);
 
     if(show_images_cli_arg)
     {
         // Images displayed only when invoked with [show_images=1]
+        imshow("Filled contour", diff);
+        waitKey(0);
         imshow("Filled contour", edges_image);
         waitKey(0);
     }
+
     // Find all the contours in the thresholded image
     vector<Vec4i> hierarchy;
     vector<vector<Point> > contours;
@@ -160,15 +172,15 @@ hu_moments_t hu_moments_compute(Mat& src, const int canny_threshold)
         {
             std::cout << "Area too small for contour, trying convex hull...\n";
 
-            vector<Point> convexHullPoints =  largestContourConvexHull(contours);
-
-            contours[i] = convexHullPoints;
-            area = contourArea(contours[i]);
-            if (area < 1e3 || area > 1e7)
-            {
-                std::cout << "Failed to set the convex hull!\n";
+//            vector<Point> convexHullPoints =  largestContourConvexHull(contours);
+//
+//            contours[i] = convexHullPoints;
+//            area = contourArea(contours[i]);
+//            if (area < 1e3 || area > 1e7)
+//            {
+//                std::cout << "Failed to set the convex hull!\n";
                 continue;
-            }
+//            }
         }
 
         std::cout << "area = " << area << " for contour " << i << '\n';
