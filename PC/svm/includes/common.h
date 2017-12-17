@@ -80,12 +80,18 @@ bool test_svm_with_data(const CvSVM& svm, const json& test_data_json)
     const std::vector<int> labels = svm_read_labels_from_json(test_data_json);
     bool is_result_correct = true;
     unsigned int correct_count = 0;
-    unsigned int total_count = labels.size();
+    unsigned int total_count = 0;
 
     for(auto i = 0; i < test_data_mat.rows; ++i)
     {
         int expected = labels[i];
-        std::cout << "expected: " << labels[i] << std::endl;
+        if(expected == 0)
+        {
+            // Do not test data which was not labeled
+            continue;
+        }
+        total_count++;
+
         int predicted = svm.predict(test_data_mat.row(i));
 
         if(expected != predicted)
@@ -97,6 +103,7 @@ bool test_svm_with_data(const CvSVM& svm, const json& test_data_json)
         }
         else
         {
+            std::cout << "Correct! Expected: " << labels[i] << std::endl;
             correct_count++;
         }
     }
