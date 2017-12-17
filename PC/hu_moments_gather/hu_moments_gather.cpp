@@ -5,6 +5,7 @@
 
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/core/core.hpp>
 
 #include <json.hpp>
 #include "print_vector.h"
@@ -18,39 +19,50 @@ using json = nlohmann::json;
 typedef std::vector<float> hu_moments_t;
 
 // Functions
-static hu_moments_t hu_moments_compute(Mat& src, const int thresh);
+static hu_moments_t hu_moments_compute(const Mat& src, const int canny_threshold, const int upper_threshold);
 
 // Configuration constants
-const int threshold_ratio = 2;
-const int sobel_kernel_size = 3;
 const std::string output_json_file = "../svm/data/dataset_training_hu_needs_label.json";
 
 // CLI arguments
-int canny_threshold;         // required argument
-int show_images_cli_arg = 0; // optional argument: by default don't show images
-
+int canny_threshold;
+bool show_images_cli_arg;
+bool label_images_cli_arg;
+int upper_canny_threshold;
+int sobel_kernel_size;
+int label = 0;
 
 int main(int argc, char** argv)
 {
-    if(argc < 3)
+    const char* keys = {
+        "{h | help  | false | print this message     }"
+        "{i | input |       | input images list file }"
+        "{l | lower | 150   | lower canny threshold  }"
+        "{u | upper | 300   | upper canny threshold  }"
+        "{k | kernel| 3     | sobel kernel size  }"
+        "{m | mark  | false | mark images with acorn orientation }"
+        "{s | show  | false | show images  }"
+    };
+
+    CommandLineParser parser(argc, argv, keys);
+
+    if( argc < 2 || parser.get<bool>("help"))
     {
-        std::cout << "Usage: ./hu_moments_gather <input_images_list_file> <init_canny_threshold> [show_images]\n";
+        parser.printParams();
         exit(1);
     }
 
-    if(argc >= 3)
-    {
-        canny_threshold = atoi(argv[2]);
-    }
-    if(argc == 4)
-    {
-        show_images_cli_arg = atoi(argv[3]);
-        std::cout << "Show images: " << (show_images_cli_arg ? "yes" : "no") << std::endl;
-    }
+    canny_threshold = parser.get<int>("lower");
+    upper_canny_threshold = parser.get<int>("upper");
+    sobel_kernel_size = parser.get<int>("kernel");
+    show_images_cli_arg = parser.get<bool>("show");
+    label_images_cli_arg = parser.get<bool>("mark");
+
+    std::cout << "Show images: " << (show_images_cli_arg ? "yes" : "no") << std::endl;
 
     // Read a list of images from file. The list file has to be in the same folder as the program for the imported paths to be valid
     std::vector<std::string> images_to_process;
-    std::ifstream images_list(argv[1]);
+    std::ifstream images_list(parser.get<std::string>("input"));
 
     std::cout << "Adding images ";
     for (std::string line; std::getline(images_list, line); )
@@ -66,7 +78,7 @@ int main(int argc, char** argv)
     {
         Mat src_image = imread(image_file, 1);
 
-        hu_moments_t hu_moments = hu_moments_compute(src_image, canny_threshold);
+        hu_moments_t hu_moments = hu_moments_compute(src_image, canny_threshold, upper_canny_threshold);
 
         print_vector(hu_moments);
 
@@ -80,7 +92,9 @@ int main(int argc, char** argv)
 
         hu_json["image"] = image_file;
         hu_json["hu_moments"] = hu_moments_string;
-        hu_json["label"] = 0;
+        hu_json["label"] = label;
+
+        label = 0;
 
         json_objects.push_back(hu_json);
     }
@@ -94,51 +108,32 @@ int main(int argc, char** argv)
     return 0;
 }
 
-vector<Point> largestContourConvexHull(const vector<vector<Point> >& contours )
-{
-    vector<Point> result, pts;
-    std::pair<double, vector<Point>> maxArea;
-
-    for ( size_t i = 0; i < contours.size(); i++)
-    {
-        vector<Point> tmpPts;
-        for ( size_t j = 0; j< contours[i].size(); j++)
-        {
-            tmpPts.push_back(contours[i][j]);
-            pts.push_back(contours[i][j]);
-        }
-
-        auto contourAreaSize = contourArea(tmpPts);
-
-        if(contourAreaSize > maxArea.first)
-        {
-            maxArea.first = contourAreaSize;
-            maxArea.second = tmpPts;
-        }
-    }
-
-//  Calculate for the largest contour only
-    convexHull(maxArea.second, result );
-    return result;
-}
-
-hu_moments_t hu_moments_compute(Mat& src, const int canny_threshold)
+hu_moments_t hu_moments_compute(const Mat& src, const int canny_threshold, const int upper_threshold)
 {
     hu_moments_t hu_vector;
 
-    Mat gray_image;
+    Mat gray_image, gray_bg;
     cvtColor(src, gray_image, COLOR_BGR2GRAY);
+
+    Mat bg = imread("bg.png");
+    cvtColor(bg, gray_bg, COLOR_BGR2GRAY);
+
+    Mat diff(gray_image);
+    absdiff(gray_image, gray_bg, diff);
 
     // Detect edges using Canny
     Mat edges_image;
-    Canny(gray_image, edges_image, canny_threshold, canny_threshold*threshold_ratio, sobel_kernel_size);
+    Canny(diff, edges_image, canny_threshold, upper_threshold, sobel_kernel_size);
+//    Canny(gray_image, edges_image, canny_threshold, upper_threshold, sobel_kernel_size);
 
-    if(show_images_cli_arg)
+    if(show_images_cli_arg && !label_images_cli_arg)
     {
-        // Images displayed only when invoked with [show_images=1]
+        imshow("Filled contour", diff);
+        waitKey(0);
         imshow("Filled contour", edges_image);
         waitKey(0);
     }
+
     // Find all the contours in the thresholded image
     vector<Vec4i> hierarchy;
     vector<vector<Point> > contours;
@@ -153,15 +148,7 @@ hu_moments_t hu_moments_compute(Mat& src, const int canny_threshold)
         {
             std::cout << "Area too small for contour, trying convex hull...\n";
 
-            vector<Point> convexHullPoints =  largestContourConvexHull(contours);
-
-            contours[i] = convexHullPoints;
-            area = contourArea(contours[i]);
-            if (area < 1e3 || area > 1e7)
-            {
-                std::cout << "Failed to set the convex hull!\n";
-                continue;
-            }
+            continue;
         }
 
         std::cout << "area = " << area << " for contour " << i << '\n';
@@ -179,9 +166,21 @@ hu_moments_t hu_moments_compute(Mat& src, const int canny_threshold)
 
         if(show_images_cli_arg)
         {
-            // Images displayed only when invoked with [show_images=1]
-            imshow("Filled contour", shape);
-            waitKey(0);
+            if(label_images_cli_arg)
+            {
+                namedWindow("Filled contour", WINDOW_NORMAL);
+                imshow("Filled contour", shape);
+                waitKey(100);
+
+                std::cout << "Please provide orientation for acorn\n";
+                std::cout << "1: left, -1: right, 0: no decision\n";
+                std::cin >> label;
+            }
+            else
+            {
+                imshow("Filled contour", shape);
+                waitKey(0);
+            }
         }
 
         // Compute Hu moments the filled shape

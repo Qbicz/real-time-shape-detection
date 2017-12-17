@@ -1,1 +1,1 @@
-./hu_moments_gather img_list.txt 150 1
+./hu_moments_gather -i problems.txt -s -l 130 -u 380
