@@ -22,7 +22,7 @@ static hu_moments_t hu_moments_compute(Mat& src, const int thresh);
 
 // Configuration constants
 const int threshold_ratio = 2;
-const int sobel_kernel_size = 3;
+const int sobel_kernel_size = 3; // TODO: try bigger kernel
 const std::string output_json_file = "../svm/data/dataset_training_hu_needs_label.json";
 
 // CLI arguments
@@ -126,6 +126,10 @@ hu_moments_t hu_moments_compute(Mat& src, const int canny_threshold)
 {
     hu_moments_t hu_vector;
 
+    // TODO: odejmowanie obiektu od tla
+
+    // TODO; odejmowanie poprzedniej ramki w celu stwierdzenia ze cos sie zmienilo
+
     Mat gray_image;
     cvtColor(src, gray_image, COLOR_BGR2GRAY);
 
@@ -149,7 +153,7 @@ hu_moments_t hu_moments_compute(Mat& src, const int canny_threshold)
         // Calculate the area of each contour
         double area = contourArea(contours[i]);
         // Fix contours that are too small or too large
-        if (area < 1e3 || area > 1e7)
+        if (area < 1e3 || area > 1e7) // TODO: take percentage of image area
         {
             std::cout << "Area too small for contour, trying convex hull...\n";
 

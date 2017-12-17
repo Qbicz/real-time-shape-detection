@@ -4,13 +4,13 @@ CXX=g++
 CXXFLAGS= `pkg-config --cflags opencv` -std=c++11
 LDLIBS= `pkg-config --libs opencv`
 # --cflags
-DEPS = 
+DEPS =
 INCLUDES = -I../includes -I$(ROOT_DIR)/modules
 OBJ = svm_test.o
 
 
 all: welcome clean svm_test
-        
+
 %.o: %.cpp $(DEPS)
 	@echo Compiling $< with $(CXX)...
 	$(CXX) -c $(INCLUDES) -o $@ $< $(CXXFLAGS)
@@ -26,7 +26,7 @@ less:
 
 welcome:
 	@echo ---------------------------------------
-	@echo ---- SVM Training + Save to file ------
+	@echo ---- SVM Load from file + Test --------
 	@echo ---------------------------------------
 
 # (useful when debugging)
