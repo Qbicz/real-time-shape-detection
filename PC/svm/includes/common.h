@@ -4,7 +4,7 @@
 #include "json.hpp"
 #include "print_vector.h"
 
-const unsigned int DATA_DIMENSIONS = 7; // for Hu moments, it will be 7
+const unsigned int DATA_DIMENSIONS = 2; // for Hu moments, it will be 7
 
 using json = nlohmann::json;
 
@@ -37,7 +37,7 @@ std::vector<int> svm_read_labels_from_json(const json& data_json)
     return labels;
 }
 
-cv::Mat svm_read_data_from_json(const json& data_json)
+cv::Mat svm_read_data_from_json(const json& data_json, const std::vector<int>& interesting_moments_indexes = {})
 {
     // Set up training data
     std::vector<float> training_data;
@@ -56,6 +56,13 @@ cv::Mat svm_read_data_from_json(const json& data_json)
 
         // Read training data
         std::vector<float> training_element = string_to_vector(element["hu_moments"]);
+
+        if (!interesting_moments_indexes.empty())
+        {
+            training_element = vector_subset(training_element, interesting_moments_indexes);
+            std::cout << "Subset of a vector:" << std::endl;
+            print_vector(training_element);
+        }
 
         // Put new element at the end of vector containing all data. The data will be then reshaped.
         if (training_element.size() > 0)

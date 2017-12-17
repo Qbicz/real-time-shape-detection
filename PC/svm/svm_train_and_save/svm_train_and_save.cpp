@@ -40,7 +40,8 @@ int main(int argc, char** argv)
     std::cout << "Data set size: " << training_data_json.size() << std::endl;
 
     // Get training data in format for OpenCV SVM
-    const Mat training_data_mat = svm_read_data_from_json(training_data_json);
+    std::vector<int> interesting_moments = {4, 7};
+    const Mat training_data_mat = svm_read_data_from_json(training_data_json, interesting_moments);
     std::cout << "Training data Mat:\n" << training_data_mat << std::endl;
 
     // Put training labels in format for OpenCV SVM
