@@ -144,7 +144,9 @@ hu_moments_t hu_moments_compute(const Mat& src, const int canny_threshold, const
         // Calculate the area of each contour
         double area = contourArea(contours[i]);
         // Fix contours that are too small or too large
-        if (area < 1e3 || area > 1e7)
+        const int imageArea = edges_image.rows * edges_image.cols;
+
+        if (area / imageArea < 0.001)
         {
             std::cout << "Area too small for contour, trying convex hull...\n";
 
