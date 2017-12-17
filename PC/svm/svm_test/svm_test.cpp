@@ -13,16 +13,17 @@ using json = nlohmann::json;
 
 int main(int argc, char* argv[])
 {
-    if(argc < 2)
+    if(argc < 3)
     {
-        std::cout << "Please provide trained svm file\n";
+        std::cout << "Usage:\n./svm_test <trained svm file> <testing dataset>\n";
         exit(1);
     }
 
     std::string svmFile(argv[1]);
-    std::cout << "Loading SVM from file " << svmFile  << "... ";
+    std::string testing_dataset(argv[2]);
 
     CvSVM svm;
+    std::cout << "Loading SVM from file " << svmFile  << "... ";
     svm.load(svmFile.c_str());
 
     std::cout << "SUCCESS!\n";
@@ -34,7 +35,7 @@ int main(int argc, char* argv[])
     }
 
     // Read input training data to JSON object
-    std::ifstream test_data("../data/dataset_training_labeled_canny150.json"); // for now use training dataset, it should give 100% accuracy
+    std::ifstream test_data(testing_dataset);
     json test_data_json;
     test_data >> test_data_json;
 
