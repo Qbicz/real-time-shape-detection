@@ -1,1 +1,3 @@
- cat dataset_training_hu_needs_label.json | python -m json.tool > dataset_training_hu_prettified.json
+DATASET_NAME=$1
+echo $DATASET_NAME
+cat $DATASET_NAME | python -m json.tool > $DATASET_NAME
