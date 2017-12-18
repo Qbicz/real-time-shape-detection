@@ -1,5 +1,6 @@
 CXX=g++
-CXXFLAGS= `pkg-config --libs opencv` -std=c++11
+CXXFLAGS= `pkg-config --cflags opencv` -std=c++14
+LIBS=`pkg-config --libs opencv`
 # --cflags
 DEPS = 
 OBJ = capture.o
@@ -11,7 +12,7 @@ all: welcome clean capture
 	$(CXX) -c -o $@ $< $(CXXFLAGS)
 
 capture: $(OBJ)
-	$(CXX) -o $@ $^ $(CXXFLAGS)
+	$(CXX) -o $@ $^ $(LIBS)
 
 clean:
 	rm -f *.o *~

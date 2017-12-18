@@ -1,5 +1,6 @@
 CXX=g++
-CXXFLAGS=-Wall -std=c++11 `pkg-config --cflags --libs opencv`
+CXXFLAGS=-Wall -std=c++11 `pkg-config --cflags  opencv`
+LIBS=`pkg-config --libs opencv`
 DEPS = 
 OBJ = segmentation.o
 
@@ -10,7 +11,7 @@ all: welcome clean segmentation
 	$(CXX) -c -o $@ $< $(CXXFLAGS)
 
 segmentation: $(OBJ)
-	$(CXX) -o $@ $^ $(CXXFLAGS)
+	$(CXX) -o $@ $^ $(LIBS)
 
 clean:
 	rm -f *.o *~
