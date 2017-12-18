@@ -41,7 +41,9 @@ int main(int argc, char* argv[])
 
     std::cout << "Test points: " << test_data_json.size() << "\n";
     std::cout << "Testing trained svm... ";
-    std::cout << (test_svm_with_data(svm, test_data_json) ? "OK" : "NOT OK") << std::endl;
+
+    std::vector<int> interesting_moments = {4, 7};
+    std::cout << (test_svm_with_data(svm, test_data_json, interesting_moments) ? "OK" : "NOT OK") << std::endl;
 
     return 0;
 }

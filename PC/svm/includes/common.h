@@ -55,7 +55,7 @@ cv::Mat svm_read_data_from_json(const json& data_json, const std::vector<int>& i
         labeled_dataset_size++;
 
         // Read training data
-        std::vector<float> training_element = string_to_vector(element["hu_moments"]);
+        std::vector<float> training_element = string_to_vector<float>(element["hu_moments"]);
 
         if (!interesting_moments_indexes.empty())
         {
@@ -81,9 +81,9 @@ cv::Mat svm_read_data_from_json(const json& data_json, const std::vector<int>& i
     return cv::Mat(training_data).reshape(0, labeled_dataset_size);
 }
 
-bool test_svm_with_data(const CvSVM& svm, const json& test_data_json)
+bool test_svm_with_data(const CvSVM& svm, const json& test_data_json, const std::vector<int>& interesting_moments_indexes = {})
 {
-    const cv::Mat test_data_mat = svm_read_data_from_json(test_data_json);
+    const cv::Mat test_data_mat = svm_read_data_from_json(test_data_json, interesting_moments_indexes);
     const std::vector<int> labels = svm_read_labels_from_json(test_data_json);
     bool is_result_correct = true;
     unsigned int correct_count = 0;
