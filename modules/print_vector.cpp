@@ -1,6 +1,7 @@
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include <string>
 #include <iterator>
 #include <algorithm>
 #include "print_vector.h"
@@ -57,7 +58,7 @@ std::vector<T> string_to_vector(const std::string& str)
 }
 
 template <class T>
-std::vector<T> vector_subset(const std::vector<T>& vect, std::vector<int> chosen_indexes)
+std::vector<T> vector_subset(const std::vector<T>& vect, std::vector<int>& chosen_indexes)
 {
     std::vector<T> new_vect;
 

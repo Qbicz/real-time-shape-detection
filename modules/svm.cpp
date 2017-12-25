@@ -1,14 +1,16 @@
-#ifndef COMMON_H
-#define COMMON_H
+#include <opencv2/core/core.hpp>
+#include <opencv2/ml/ml.hpp>
 
 #include "json.hpp"
 #include "print_vector.h"
+#include "svm.h"
 
 const unsigned int DATA_DIMENSIONS = 2; // for Hu moments, it will be 7
 
+using namespace cv;
 using json = nlohmann::json;
 
-std::vector<int> svm_read_labels_from_json(const json& data_json)
+std::vector<int> svm_prepare_labels_from_json(const json& data_json)
 {
     std::vector<int> labels;
     size_t labeled_dataset_size = 0;
@@ -37,7 +39,7 @@ std::vector<int> svm_read_labels_from_json(const json& data_json)
     return labels;
 }
 
-cv::Mat svm_read_data_from_json(const json& data_json, const std::vector<int>& interesting_moments_indexes = {})
+cv::Mat svm_prepare_data_from_json(const json& data_json, const std::vector<int>& interesting_moments_indexes = {})
 {
     // Set up training data
     std::vector<float> training_data;
@@ -81,7 +83,7 @@ cv::Mat svm_read_data_from_json(const json& data_json, const std::vector<int>& i
     return cv::Mat(training_data).reshape(0, labeled_dataset_size);
 }
 
-bool test_svm_with_data(const CvSVM& svm, const json& test_data_json, const std::vector<int>& interesting_moments_indexes = {})
+bool svm_test(const CvSVM& svm, const json& test_data_json, const std::vector<int>& interesting_moments_indexes = {})
 {
     const cv::Mat test_data_mat = svm_read_data_from_json(test_data_json, interesting_moments_indexes);
     const std::vector<int> labels = svm_read_labels_from_json(test_data_json);
@@ -121,4 +123,3 @@ bool test_svm_with_data(const CvSVM& svm, const json& test_data_json, const std:
     return is_result_correct;
 }
 
-#endif

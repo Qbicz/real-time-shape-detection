@@ -6,7 +6,7 @@
 
 #include <json.hpp>
 
-#include "common.h"
+#include "svm.h"
 #include "print_vector.h"
 
 const int JSON_TAB_SIZE = 4;
@@ -41,11 +41,11 @@ int main(int argc, char** argv)
 
     // Get training data in format for OpenCV SVM
     std::vector<int> interesting_moments = {4, 7};
-    const Mat training_data_mat = svm_read_data_from_json(training_data_json, interesting_moments);
+    const Mat training_data_mat = svm_prepare_data_from_json(training_data_json, interesting_moments);
     std::cout << "Training data Mat:\n" << training_data_mat << std::endl;
 
     // Put training labels in format for OpenCV SVM
-    std::vector<int> labels = svm_read_labels_from_json(training_data_json);
+    std::vector<int> labels = svm_prepare_labels_from_json(training_data_json);
     const Mat labels_mat(labels);
     std::cout << "Labels Mat:\n" << labels_mat << std::endl;
 
