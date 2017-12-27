@@ -7,7 +7,7 @@
 #include <json.hpp>
 
 #include "svm.h"
-#include "print_vector.h"
+#include "vector_op.h"
 
 const int JSON_TAB_SIZE = 4;
 

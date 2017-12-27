@@ -2,7 +2,7 @@
 #include <opencv2/ml/ml.hpp>
 
 #include "json.hpp"
-#include "print_vector.h"
+#include "vector_op.h"
 #include "svm.h"
 
 const unsigned int DATA_DIMENSIONS = 2; // for Hu moments, it will be 7
@@ -85,8 +85,8 @@ cv::Mat svm_prepare_data_from_json(const json& data_json, const std::vector<int>
 
 bool svm_test(const CvSVM& svm, const json& test_data_json, const std::vector<int>& interesting_moments_indexes = {})
 {
-    const cv::Mat test_data_mat = svm_read_data_from_json(test_data_json, interesting_moments_indexes);
-    const std::vector<int> labels = svm_read_labels_from_json(test_data_json);
+    const cv::Mat test_data_mat = svm_prepare_data_from_json(test_data_json, interesting_moments_indexes);
+    const std::vector<int> labels = svm_prepare_labels_from_json(test_data_json);
     bool is_result_correct = true;
     unsigned int correct_count = 0;
     unsigned int total_count = 0;

@@ -2,7 +2,6 @@
 #define __SVM_H__
 
 #include "json.hpp"
-#include "print_vector.h"
 
 using json = nlohmann::json;
 

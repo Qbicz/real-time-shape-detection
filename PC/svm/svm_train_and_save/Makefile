@@ -5,7 +5,6 @@ CXXFLAGS= `pkg-config --cflags opencv` -std=c++11
 LDLIBS= `pkg-config --libs opencv`
 DEPS =
 INCLUDES = -I../includes -I$(ROOT_DIR)/modules
-OBJ = svm_train_and_save.o
 
 SRC = $(wildcard ./*.cpp) \
       $(wildcard $(ROOT_DIR)/modules/*.cpp)
@@ -18,6 +17,7 @@ all: welcome clean svm_train_and_save
 	$(CXX) -c -o $@ $< $(CXXFLAGS) $(INCLUDES)
 
 svm_train_and_save: $(OBJ)
+	@echo Linking...
 	$(CXX) -o $@ $^ $(LDLIBS)
 
 clean:
