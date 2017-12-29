@@ -1,10 +1,15 @@
+#ifndef __PRINT_VECTOR_H__
+#define __PRINT_VECTOR_H__
+
 #include <iostream>
 #include <sstream>
 #include <vector>
+#include <string>
 #include <iterator>
-#include "print_vector.h"
+#include <algorithm>
 
-void print_vector(const std::vector<float> &vect)
+template <class T>
+void print_vector(const std::vector<T>& vect)
 {
     std::cout << "std::vector [ ";
     for (auto vect_elem : vect)
@@ -14,7 +19,8 @@ void print_vector(const std::vector<float> &vect)
     std::cout << "]\n";
 }
 
-std::string vector_to_string(const std::vector<float>& vect)
+template <class T>
+std::string vector_to_string(const std::vector<T>& vect)
 {
     std::ostringstream oss;
 
@@ -22,7 +28,7 @@ std::string vector_to_string(const std::vector<float>& vect)
     {
         // Convert all but the last element to avoid a trailing ","
         std::copy(vect.begin(), vect.end()-1,
-            std::ostream_iterator<float>(oss, ","));
+            std::ostream_iterator<T>(oss, ","));
 
         // Now add the last element with no delimiter
         oss << vect.back();
@@ -35,9 +41,10 @@ std::string vector_to_string(const std::vector<float>& vect)
     }
 }
 
-std::vector<float> string_to_vector(const std::string& str)
+template <class T>
+std::vector<T> string_to_vector(const std::string& str)
 {
-    std::vector<float> vect;
+    std::vector<T> vect;
     std::stringstream ss(str);
     float i;
 
@@ -51,4 +58,22 @@ std::vector<float> string_to_vector(const std::string& str)
 
     return vect;
 }
+
+template <class T>
+std::vector<T> vector_subset(const std::vector<T>& vect, const std::vector<int>& chosen_indexes)
+{
+    std::vector<T> new_vect;
+
+    auto indexes = chosen_indexes;
+    std::sort(indexes.begin(), indexes.end());
+
+    for (auto index : indexes)
+    {
+        new_vect.push_back(vect[index]);
+    }
+
+    return new_vect;
+}
+
+#endif /* __PRINT_VECTOR_H__ */
 

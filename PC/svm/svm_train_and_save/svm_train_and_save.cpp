@@ -6,8 +6,8 @@
 
 #include <json.hpp>
 
-#include "common.h"
-#include "print_vector.h"
+#include "svm.h"
+#include "vector_op.h"
 
 const int JSON_TAB_SIZE = 4;
 
@@ -19,16 +19,20 @@ int main(int argc, char** argv)
     // Parse command line arguments
     std::string input_filename;
 
-    if(argc < 2)
+    const char* keys = {
+        "{h | help                | false | print this message     }"
+        "{i | input_training_data |       | input training JSON file }"
+    };
+
+    CommandLineParser parser(argc, argv, keys);
+
+    if( argc < 2 || parser.get<bool>("help"))
     {
-        std::cout << "Usage: ./svm_train_and_save <input_json_training_data>" << std::endl;
-        std::cout << "Example: ./svm_train_and_save ../data/dataset_training_labeled_canny150.json" << std::endl;
+        parser.printParams();
         exit(1);
     }
-    if(argc >= 2)
-    {
-        input_filename = argv[1];
-    }
+
+    input_filename = parser.get<std::string>("input_training_data");
 
     // Prepare file with input training data
     std::ifstream input_training_data(input_filename);
@@ -40,11 +44,12 @@ int main(int argc, char** argv)
     std::cout << "Data set size: " << training_data_json.size() << std::endl;
 
     // Get training data in format for OpenCV SVM
-    const Mat training_data_mat = svm_read_data_from_json(training_data_json);
+    std::vector<int> interesting_moments = {4, 7};
+    const Mat training_data_mat = svm_prepare_data_from_json(training_data_json, interesting_moments);
     std::cout << "Training data Mat:\n" << training_data_mat << std::endl;
 
     // Put training labels in format for OpenCV SVM
-    std::vector<int> labels = svm_read_labels_from_json(training_data_json);
+    std::vector<int> labels = svm_prepare_labels_from_json(training_data_json);
     const Mat labels_mat(labels);
     std::cout << "Labels Mat:\n" << labels_mat << std::endl;
 
