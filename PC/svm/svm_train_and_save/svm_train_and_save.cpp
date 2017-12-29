@@ -19,16 +19,20 @@ int main(int argc, char** argv)
     // Parse command line arguments
     std::string input_filename;
 
-    if(argc < 2)
+    const char* keys = {
+        "{h | help                | false | print this message     }"
+        "{i | input_training_data |       | input training JSON file }"
+    };
+
+    CommandLineParser parser(argc, argv, keys);
+
+    if( argc < 2 || parser.get<bool>("help"))
     {
-        std::cout << "Usage: ./svm_train_and_save <input_json_training_data>" << std::endl;
-        std::cout << "Example: ./svm_train_and_save ../data/dataset_training_labeled_absdiff_kernel5.json" << std::endl;
+        parser.printParams();
         exit(1);
     }
-    if(argc >= 2)
-    {
-        input_filename = argv[1];
-    }
+
+    input_filename = parser.get<std::string>("input_training_data");
 
     // Prepare file with input training data
     std::ifstream input_training_data(input_filename);
