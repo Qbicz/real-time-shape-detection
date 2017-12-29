@@ -19,7 +19,7 @@ all: welcome clean svm_test
 	$(CXX) -c $(INCLUDES) -o $@ $< $(CXXFLAGS)
 
 svm_test:	$(OBJ)
-	$(CXX) -o $@ $^ $(CXXFLAGS) $(LDLIBS)
+	$(CXX) -o $@ $^ $(LDLIBS)
 
 clean:
 	rm -f *.o *~

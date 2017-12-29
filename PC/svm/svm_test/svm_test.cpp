@@ -13,14 +13,23 @@ using json = nlohmann::json;
 
 int main(int argc, char* argv[])
 {
-    if(argc < 3)
+    const char* keys = {
+        "{h  | help             | false | print this message }"
+        "{t  | trained_svm      |       | trained SVM file }"
+        "{d  | testing_dataset  |       | data used for testing of SVM recognition }"
+    };
+
+    CommandLineParser parser(argc, argv, keys);
+
+    if( argc < 5 || parser.get<bool>("help"))
     {
-        std::cout << "Usage:\n./svm_test <trained svm file> <testing dataset>\n";
+        parser.printParams();
         exit(1);
     }
 
-    std::string svmFile(argv[1]);
-    std::string testing_dataset(argv[2]);
+    std::string svmFile         = parser.get<std::string>("trained_svm");
+    std::string testing_dataset = parser.get<std::string>("testing_dataset");
+
 
     CvSVM svm;
     std::cout << "Loading SVM from file " << svmFile  << "... ";
