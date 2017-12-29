@@ -3,8 +3,8 @@
 #include <opencv2/ml/ml.hpp>
 #include <fstream>
 
-#include "common.h"
-#include "print_vector.cpp"
+#include "svm.h"
+#include "vector_op.h"
 
 //see https://docs.opencv.org/2.4/modules/ml/doc/support_vector_machines.html#cvsvm-predict for reference
 
@@ -43,7 +43,7 @@ int main(int argc, char* argv[])
     std::cout << "Testing trained svm... ";
 
     std::vector<int> interesting_moments = {4, 7};
-    std::cout << (test_svm_with_data(svm, test_data_json, interesting_moments) ? "OK" : "NOT OK") << std::endl;
+    std::cout << (svm_test(svm, test_data_json, interesting_moments) ? "OK" : "NOT OK") << std::endl;
 
     return 0;
 }
