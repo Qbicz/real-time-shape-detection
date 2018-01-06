@@ -1,7 +1,7 @@
 ROOT_DIR=../..
 
 CXX=g++
-CXXFLAGS= -std=c++11 -I$(ROOT_DIR)/modules `pkg-config --cflags opencv` -I$(ROOT_DIR)/PC/svm/includes/
+CXXFLAGS= -std=c++11 -I$(ROOT_DIR)/modules `pkg-config --cflags opencv` -I$(ROOT_DIR)/PC/svm/includes/ -I$(ROOT_DIR)/modules
 LDLIBS= `pkg-config --libs opencv`
 DEPS = 
 
