@@ -5,10 +5,10 @@
 #include "vector_op.h"
 #include "svm.h"
 
-const unsigned int DATA_DIMENSIONS = 2; // for Hu moments, it will be 7
-
 using namespace cv;
 using json = nlohmann::json;
+
+const unsigned int hu_moments_num = 7;
 
 std::vector<int> svm_prepare_labels_from_json(const json& data_json)
 {
@@ -25,7 +25,7 @@ std::vector<int> svm_prepare_labels_from_json(const json& data_json)
         }
         else
         {
-            std::cout << "Label " << static_cast<int>(element["label"]) << std::endl;
+            //std::cout << "Label " << static_cast<int>(element["label"]) << std::endl;
 
             // Read training label
             labels.push_back(element["label"]);
@@ -39,11 +39,34 @@ std::vector<int> svm_prepare_labels_from_json(const json& data_json)
     return labels;
 }
 
-cv::Mat svm_prepare_data_from_json(const json& data_json, const std::vector<int>& interesting_moments_indexes = {})
+cv::Mat svm_prepare_data_from_json(const json& data_json, const std::string& feature, const std::vector<int>& interesting_moments_indexes = {})
 {
+    if (feature != "hu" && feature != "com") // Hu moments used as feature
+    {
+        std::cerr << "Unknown feature " << feature << std::endl;
+        exit(-1);
+    }
+
     // Set up training data
     std::vector<float> training_data;
     size_t labeled_dataset_size = 0;
+    unsigned int data_dimensions;
+
+    if (feature == "hu")
+    {
+        if (interesting_moments_indexes.empty())
+        {
+            data_dimensions = hu_moments_num;
+        }
+        else
+        {
+            data_dimensions = interesting_moments_indexes.size();
+        }
+    }
+    else if (feature == "com")
+    {
+        data_dimensions = 1;
+    }
 
     // For each acorn read its Hu moments
     for (const auto& element : data_json)
@@ -57,39 +80,56 @@ cv::Mat svm_prepare_data_from_json(const json& data_json, const std::vector<int>
         labeled_dataset_size++;
 
         // Read training data
-        std::vector<float> training_element = string_to_vector<float>(element["hu_moments"]);
-
-        if (!interesting_moments_indexes.empty())
+        if (feature == "hu")
         {
-            training_element = vector_subset(training_element, interesting_moments_indexes);
-            std::cout << "Subset of a vector:" << std::endl;
-            print_vector(training_element);
-        }
+            std::vector<float> training_element = string_to_vector<float>(element["hu_moments"]);
 
-        // Put new element at the end of vector containing all data. The data will be then reshaped.
-        if (training_element.size() > 0)
-        {
-            training_data.insert(
-                training_data.end(),
-                training_element.begin(),
-                training_element.end());
+            if (!interesting_moments_indexes.empty())
+            {
+                training_element = vector_subset(training_element, interesting_moments_indexes);
+                std::cout << "Subset of a vector:" << std::endl;
+                print_vector(training_element);
+            }
+
+            // Put new element at the end of vector containing all data. The data will be then reshaped.
+            if (training_element.size() > 0)
+            {
+                training_data.insert(training_data.end(), training_element.begin(), training_element.end());
+            }
         }
+        else if (feature == "com")
+        {
+            float training_element = element["center_of_mass_position"];
+
+            training_data.push_back(training_element);
+        }
+        else
+            exit(-1);
     }
 
     // Prepare data in format for SVM
     // Create a matrix from vector and reshape matrix to have one training element in one row
     // It is done this way because there's no conversion between vector<vector<float> > and cv::Mat
-    assert(DATA_DIMENSIONS*labeled_dataset_size == training_data.size());
-    return cv::Mat(training_data).reshape(0, labeled_dataset_size);
+    std::cout << "labeled_dataset_size " << labeled_dataset_size << " tr data size " << training_data.size();
+    std::cout << "dimensions " << data_dimensions << std::endl;
+
+    std::cout << "training_data Mat: " << std::endl;
+    print_vector(training_data);
+
+    assert(data_dimensions*labeled_dataset_size == training_data.size());
+    // copy the local data to the returned cv::Mat to avoid dangling pointer
+    return cv::Mat(training_data).reshape(0, labeled_dataset_size).clone();
 }
 
-bool svm_test(const CvSVM& svm, const json& test_data_json, const std::vector<int>& interesting_moments_indexes = {})
+bool svm_test(const CvSVM& svm, const json& test_data_json, const std::string& feature, const std::vector<int>& interesting_moments_indexes = {})
 {
-    const cv::Mat test_data_mat = svm_prepare_data_from_json(test_data_json, interesting_moments_indexes);
+    const cv::Mat test_data_mat = svm_prepare_data_from_json(test_data_json, feature, interesting_moments_indexes);
     const std::vector<int> labels = svm_prepare_labels_from_json(test_data_json);
     bool is_result_correct = true;
     unsigned int correct_count = 0;
     unsigned int total_count = 0;
+
+    //std::cout << "test_data_mat " << test_data_mat << std::endl;
 
     for(auto i = 0; i < test_data_mat.rows; ++i)
     {
@@ -112,6 +152,7 @@ bool svm_test(const CvSVM& svm, const json& test_data_json, const std::vector<in
         }
         else
         {
+            std::cout << "Prediction for " << test_data_mat.row(i) << "... ";
             std::cout << "Correct! Expected: " << labels[i] << std::endl;
             correct_count++;
         }

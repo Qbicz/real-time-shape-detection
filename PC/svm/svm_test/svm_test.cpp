@@ -17,6 +17,7 @@ int main(int argc, char* argv[])
         "{h  | help             | false | print this message }"
         "{t  | trained_svm      |       | trained SVM file }"
         "{d  | testing_dataset  |       | data used for testing of SVM recognition }"
+        "{f  | feature          |       | feature used for SVM testing. Can be 'hu' or 'com' }"
     };
 
     CommandLineParser parser(argc, argv, keys);
@@ -29,7 +30,7 @@ int main(int argc, char* argv[])
 
     std::string svmFile         = parser.get<std::string>("trained_svm");
     std::string testing_dataset = parser.get<std::string>("testing_dataset");
-
+    std::string feature         = parser.get<std::string>("feature");
 
     CvSVM svm;
     std::cout << "Loading SVM from file " << svmFile  << "... ";
@@ -51,8 +52,8 @@ int main(int argc, char* argv[])
     std::cout << "Test points: " << test_data_json.size() << "\n";
     std::cout << "Testing trained svm... ";
 
-    std::vector<int> interesting_moments = {4, 7};
-    std::cout << (svm_test(svm, test_data_json, interesting_moments) ? "OK" : "NOT OK") << std::endl;
+    std::vector<int> interesting_moments = {};
+    std::cout << (svm_test(svm, test_data_json, feature, interesting_moments) ? "OK" : "NOT OK") << std::endl;
 
     return 0;
 }
