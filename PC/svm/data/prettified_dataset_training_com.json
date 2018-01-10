@@ -1,0 +1,372 @@
+[
+    {
+        "center_of_mass_position": 0.475610852241516,
+        "image": "../img/acorn-c525-learning/acorn_1043.png",
+        "label": 1
+    },
+    {
+        "center_of_mass_position": 0.0,
+        "image": "../img/acorn-c525-learning/acorn_1045.png",
+        "label": 0
+    },
+    {
+        "center_of_mass_position": 0.0,
+        "image": "../img/acorn-c525-learning/acorn_1171.png",
+        "label": 0
+    },
+    {
+        "center_of_mass_position": 0.0,
+        "image": "../img/acorn-c525-learning/acorn_1173.png",
+        "label": 0
+    },
+    {
+        "center_of_mass_position": 0.0,
+        "image": "../img/acorn-c525-learning/acorn_1365.png",
+        "label": 0
+    },
+    {
+        "center_of_mass_position": 0.478610694408417,
+        "image": "../img/acorn-c525-learning/acorn_1366.png",
+        "label": 0
+    },
+    {
+        "center_of_mass_position": 0.516390860080719,
+        "image": "../img/acorn-c525-learning/acorn_1477.png",
+        "label": -1
+    },
+    {
+        "center_of_mass_position": 0.503684818744659,
+        "image": "../img/acorn-c525-learning/acorn_1478.png",
+        "label": -1
+    },
+    {
+        "center_of_mass_position": 0.0,
+        "image": "../img/acorn-c525-learning/acorn_1566.png",
+        "label": 0
+    },
+    {
+        "center_of_mass_position": 0.489572525024414,
+        "image": "../img/acorn-c525-learning/acorn_1567.png",
+        "label": 1
+    },
+    {
+        "center_of_mass_position": 0.0,
+        "image": "../img/acorn-c525-learning/acorn_1678.png",
+        "label": 0
+    },
+    {
+        "center_of_mass_position": 0.513710975646973,
+        "image": "../img/acorn-c525-learning/acorn_1679.png",
+        "label": -1
+    },
+    {
+        "center_of_mass_position": 0.508028864860535,
+        "image": "../img/acorn-c525-learning/acorn_1680.png",
+        "label": -1
+    },
+    {
+        "center_of_mass_position": 0.0,
+        "image": "../img/acorn-c525-learning/acorn_1836.png",
+        "label": 0
+    },
+    {
+        "center_of_mass_position": 0.475200444459915,
+        "image": "../img/acorn-c525-learning/acorn_1838.png",
+        "label": 1
+    },
+    {
+        "center_of_mass_position": 0.0,
+        "image": "../img/acorn-c525-learning/acorn_1839.png",
+        "label": 0
+    },
+    {
+        "center_of_mass_position": 0.52847558259964,
+        "image": "../img/acorn-c525-learning/acorn_2082.png",
+        "label": -1
+    },
+    {
+        "center_of_mass_position": 0.524693846702576,
+        "image": "../img/acorn-c525-learning/acorn_2083.png",
+        "label": -1
+    },
+    {
+        "center_of_mass_position": 0.0,
+        "image": "../img/acorn-c525-learning/acorn_2085.png",
+        "label": 0
+    },
+    {
+        "center_of_mass_position": 0.458017796278,
+        "image": "../img/acorn-c525-learning/acorn_2165.png",
+        "label": 1
+    },
+    {
+        "center_of_mass_position": 0.474381804466248,
+        "image": "../img/acorn-c525-learning/acorn_2167.png",
+        "label": 1
+    },
+    {
+        "center_of_mass_position": 0.500805258750916,
+        "image": "../img/acorn-c525-learning/acorn_2264.png",
+        "label": -1
+    },
+    {
+        "center_of_mass_position": 0.493767321109772,
+        "image": "../img/acorn-c525-learning/acorn_2265.png",
+        "label": 1
+    },
+    {
+        "center_of_mass_position": 0.0,
+        "image": "../img/acorn-c525-learning/acorn_2353.png",
+        "label": 0
+    },
+    {
+        "center_of_mass_position": 0.0,
+        "image": "../img/acorn-c525-learning/acorn_2354.png",
+        "label": 0
+    },
+    {
+        "center_of_mass_position": 0.499114632606506,
+        "image": "../img/acorn-c525-learning/acorn_2476.png",
+        "label": -1
+    },
+    {
+        "center_of_mass_position": 0.0,
+        "image": "../img/acorn-c525-learning/acorn_2478.png",
+        "label": 0
+    },
+    {
+        "center_of_mass_position": 0.493854731321335,
+        "image": "../img/acorn-c525-learning/acorn_2555.png",
+        "label": 1
+    },
+    {
+        "center_of_mass_position": 0.496349602937698,
+        "image": "../img/acorn-c525-learning/acorn_2557.png",
+        "label": 0
+    },
+    {
+        "center_of_mass_position": 0.515002727508545,
+        "image": "../img/acorn-c525-learning/acorn_2664.png",
+        "label": -1
+    },
+    {
+        "center_of_mass_position": 0.0,
+        "image": "../img/acorn-c525-learning/acorn_2666.png",
+        "label": 0
+    },
+    {
+        "center_of_mass_position": 0.474165141582489,
+        "image": "../img/acorn-c525-learning/acorn_2741.png",
+        "label": 1
+    },
+    {
+        "center_of_mass_position": 0.483271807432175,
+        "image": "../img/acorn-c525-learning/acorn_2743.png",
+        "label": 1
+    },
+    {
+        "center_of_mass_position": 0.503032207489014,
+        "image": "../img/acorn-c525-learning/acorn_2853.png",
+        "label": -1
+    },
+    {
+        "center_of_mass_position": 0.5047607421875,
+        "image": "../img/acorn-c525-learning/acorn_2854.png",
+        "label": -1
+    },
+    {
+        "center_of_mass_position": 0.498771548271179,
+        "image": "../img/acorn-c525-learning/acorn_2855.png",
+        "label": -1
+    },
+    {
+        "center_of_mass_position": 0.494173109531403,
+        "image": "../img/acorn-c525-learning/acorn_2917.png",
+        "label": 1
+    },
+    {
+        "center_of_mass_position": 0.490994513034821,
+        "image": "../img/acorn-c525-learning/acorn_2918.png",
+        "label": 1
+    },
+    {
+        "center_of_mass_position": 0.505513191223145,
+        "image": "../img/acorn-c525-learning/acorn_3376.png",
+        "label": -1
+    },
+    {
+        "center_of_mass_position": 0.500695824623108,
+        "image": "../img/acorn-c525-learning/acorn_3377.png",
+        "label": 0
+    },
+    {
+        "center_of_mass_position": 0.0,
+        "image": "../img/acorn-c525-learning/acorn_3466.png",
+        "label": 0
+    },
+    {
+        "center_of_mass_position": 0.499376833438873,
+        "image": "../img/acorn-c525-learning/acorn_3467.png",
+        "label": 1
+    },
+    {
+        "center_of_mass_position": 0.532929241657257,
+        "image": "../img/acorn-c525-learning/acorn_3575.png",
+        "label": -1
+    },
+    {
+        "center_of_mass_position": 0.539556086063385,
+        "image": "../img/acorn-c525-learning/acorn_3576.png",
+        "label": -1
+    },
+    {
+        "center_of_mass_position": 0.45101261138916,
+        "image": "../img/acorn-c525-learning/acorn_3673.png",
+        "label": 1
+    },
+    {
+        "center_of_mass_position": 0.46427047252655,
+        "image": "../img/acorn-c525-learning/acorn_3674.png",
+        "label": 1
+    },
+    {
+        "center_of_mass_position": 0.524806916713715,
+        "image": "../img/acorn-c525-learning/acorn_3764.png",
+        "label": -1
+    },
+    {
+        "center_of_mass_position": 0.524166584014893,
+        "image": "../img/acorn-c525-learning/acorn_3765.png",
+        "label": -1
+    },
+    {
+        "center_of_mass_position": 0.476269572973251,
+        "image": "../img/acorn-c525-learning/acorn_3858.png",
+        "label": 1
+    },
+    {
+        "center_of_mass_position": 0.468607515096664,
+        "image": "../img/acorn-c525-learning/acorn_3859.png",
+        "label": 1
+    },
+    {
+        "center_of_mass_position": 0.508046925067902,
+        "image": "../img/acorn-c525-learning/acorn_4133.png",
+        "label": -1
+    },
+    {
+        "center_of_mass_position": 0.490530878305435,
+        "image": "../img/acorn-c525-learning/acorn_4218.png",
+        "label": 1
+    },
+    {
+        "center_of_mass_position": 0.492508739233017,
+        "image": "../img/acorn-c525-learning/acorn_4219.png",
+        "label": 1
+    },
+    {
+        "center_of_mass_position": 0.500207006931305,
+        "image": "../img/acorn-c525-learning/acorn_4332.png",
+        "label": 0
+    },
+    {
+        "center_of_mass_position": 0.498118281364441,
+        "image": "../img/acorn-c525-learning/acorn_4333.png",
+        "label": -1
+    },
+    {
+        "center_of_mass_position": 0.513792753219604,
+        "image": "../img/acorn-c525-learning/acorn_4334.png",
+        "label": 0
+    },
+    {
+        "center_of_mass_position": 0.524387001991272,
+        "image": "../img/acorn-c525-learning/acorn_4425.png",
+        "label": -1
+    },
+    {
+        "center_of_mass_position": 0.516280114650726,
+        "image": "../img/acorn-c525-learning/acorn_4426.png",
+        "label": -1
+    },
+    {
+        "center_of_mass_position": 0.5213383436203,
+        "image": "../img/acorn-c525-learning/acorn_4511.png",
+        "label": -1
+    },
+    {
+        "center_of_mass_position": 0.503956615924835,
+        "image": "../img/acorn-c525-learning/acorn_4513.png",
+        "label": -1
+    },
+    {
+        "center_of_mass_position": 0.489819496870041,
+        "image": "../img/acorn-c525-learning/acorn_4615.png",
+        "label": 1
+    },
+    {
+        "center_of_mass_position": 0.474077582359314,
+        "image": "../img/acorn-c525-learning/acorn_4616.png",
+        "label": 1
+    },
+    {
+        "center_of_mass_position": 0.514620900154114,
+        "image": "../img/acorn-c525-learning/acorn_4730.png",
+        "label": -1
+    },
+    {
+        "center_of_mass_position": 0.51182359457016,
+        "image": "../img/acorn-c525-learning/acorn_4731.png",
+        "label": -1
+    },
+    {
+        "center_of_mass_position": 0.485831081867218,
+        "image": "../img/acorn-c525-learning/acorn_4798.png",
+        "label": 1
+    },
+    {
+        "center_of_mass_position": 0.484412044286728,
+        "image": "../img/acorn-c525-learning/acorn_4800.png",
+        "label": 1
+    },
+    {
+        "center_of_mass_position": 0.0,
+        "image": "../img/acorn-c525-learning/acorn_4803.png",
+        "label": 0
+    },
+    {
+        "center_of_mass_position": 0.478506714105606,
+        "image": "../img/acorn-c525-learning/acorn_622.png",
+        "label": 1
+    },
+    {
+        "center_of_mass_position": 0.506604850292206,
+        "image": "../img/acorn-c525-learning/acorn_761.png",
+        "label": -1
+    },
+    {
+        "center_of_mass_position": 0.498981565237045,
+        "image": "../img/acorn-c525-learning/acorn_763.png",
+        "label": -1
+    },
+    {
+        "center_of_mass_position": 0.0,
+        "image": "../img/acorn-c525-learning/acorn_853.png",
+        "label": 0
+    },
+    {
+        "center_of_mass_position": 0.487357348203659,
+        "image": "../img/acorn-c525-learning/acorn_855.png",
+        "label": 1
+    },
+    {
+        "center_of_mass_position": 0.522960126399994,
+        "image": "../img/acorn-c525-learning/acorn_958.png",
+        "label": -1
+    },
+    {
+        "center_of_mass_position": 0.508371412754059,
+        "image": "../img/acorn-c525-learning/acorn_959.png",
+        "label": -1
+    }
+]

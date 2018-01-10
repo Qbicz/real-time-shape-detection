@@ -18,10 +18,12 @@ int main(int argc, char** argv)
 {
     // Parse command line arguments
     std::string input_filename;
+    std::string learning_feature;
 
     const char* keys = {
         "{h | help                | false | print this message     }"
         "{i | input_training_data |       | input training JSON file }"
+        "{f | feature             |       | feature used for learning & classification. Can be 'com' or 'hu'}"
     };
 
     CommandLineParser parser(argc, argv, keys);
@@ -33,6 +35,7 @@ int main(int argc, char** argv)
     }
 
     input_filename = parser.get<std::string>("input_training_data");
+    learning_feature = parser.get<std::string>("feature");
 
     // Prepare file with input training data
     std::ifstream input_training_data(input_filename);
@@ -42,10 +45,11 @@ int main(int argc, char** argv)
 
     std::cout << "Training data set: " << training_data_json.dump(JSON_TAB_SIZE) << std::endl;
     std::cout << "Data set size: " << training_data_json.size() << std::endl;
+    Mat training_data_mat;
+    std::vector<int> interesting_moments;
 
     // Get training data in format for OpenCV SVM
-    std::vector<int> interesting_moments = {4, 7};
-    const Mat training_data_mat = svm_prepare_data_from_json(training_data_json, interesting_moments);
+    training_data_mat = svm_prepare_data_from_json(training_data_json, learning_feature, interesting_moments);
     std::cout << "Training data Mat:\n" << training_data_mat << std::endl;
 
     // Put training labels in format for OpenCV SVM
@@ -61,9 +65,10 @@ int main(int argc, char** argv)
 
     // Train the SVM
     CvSVM svm;
-    svm.train(training_data_mat, labels_mat, Mat(), Mat(), params);
+    svm.train_auto(training_data_mat, labels_mat, Mat(), Mat(), params);
+    // TODO: minimize computational complexity of train_auto by constraining parameters
 
-    svm.save("trained.svm");
+    svm.save("auto_trained.svm");
 
     std::cout << "Information about trained SVM:" << std::endl;
     for (int i = 0; i < svm.get_support_vector_count(); ++i)

@@ -6,7 +6,7 @@
 using json = nlohmann::json;
 
 std::vector<int> svm_prepare_labels_from_json(const json& data_json);
-cv::Mat svm_prepare_data_from_json(const json& data_json, const std::vector<int>& interesting_moments_indexes);
-bool svm_test(const CvSVM& svm, const json& test_data_json, const std::vector<int>& interesting_moments_indexes);
+cv::Mat svm_prepare_data_from_json(const json& data_json, const std::string& feature, const std::vector<int>& interesting_moments_indexes);
+bool svm_test(const CvSVM& svm, const json& test_data_json, const std::string& feature, const std::vector<int>& interesting_moments_indexes);
 
 #endif
