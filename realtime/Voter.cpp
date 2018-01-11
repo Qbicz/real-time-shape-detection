@@ -2,28 +2,24 @@
 #include <string>
 #include "Voter.h"
 
-void Voter::addOrientation(int orientation)
+void Voter::add_orientation(Orientation orientation)
 {
     decisions[orientation]++;
 }
 
-std::string Voter::make_decision()
+Orientation Voter::make_decision()
 {
-    if(decisions[ORIENTATION_UNKNOWN] > 1)
+    if(decisions[UNKNOWN_ORIENTATION] > 1 || (decisions[LEFT_ORIENTED] == decisions[RIGHT_ORIENTED]))
     {
-        return "No decision can be made ;(";
-    }
-    else if(decisions[LEFT_ORIENTED] == decisions[RIGHT_ORIENTED])
-    {
-        return "Same amount of left and right decisions ;(";
+        return UNKNOWN_ORIENTATION;
     }
     else if(decisions[LEFT_ORIENTED] > decisions[RIGHT_ORIENTED])
     {
-        return "LEFT ORIENTED ACORN";
+        return LEFT_ORIENTED;
     }
     else
     {
-        return "RIGHT ORIENTED ACORN";
+        return RIGHT_ORIENTED;
     }
 }
 
@@ -34,4 +30,3 @@ void Voter::reset()
         elem = 0;
     }
 }
-

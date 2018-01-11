@@ -11,7 +11,7 @@ void OrientationDetectionFsm::react(AcornMissing const& e) {}
 void OrientationDetectionFsm::entry(void) {}
 void OrientationDetectionFsm::exit(void)  {}
 
-void OrientationDetectionFsm::setAllowedEmptyFrames(int size)
+void OrientationDetectionFsm::set_allowed_empty_frames(int size)
 {
     allowed_empty_frames = size;
 }
@@ -27,7 +27,7 @@ void Idle::entry(void)
 void Idle::react(const AcornDetected& event)
 {
     ++sequence_length;
-    voter.addOrientation(event.orientation);
+    voter.add_orientation(event.orientation);
 
     transit<InGatheringSequence>([]{});
 }
@@ -41,7 +41,7 @@ void Idle::react(const AcornMissing&)
 void InGatheringSequence::react(const AcornDetected& event)
 {
     ++sequence_length;
-    voter.addOrientation(event.orientation);
+    voter.add_orientation(event.orientation);
 }
 
 void InGatheringSequence::entry(void)

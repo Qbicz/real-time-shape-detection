@@ -7,7 +7,9 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/core/core.hpp>
 
+#include "Events.h"
 #include "FSM.h"
+
 FSM_INITIAL_STATE(OrientationDetectionFsm, Idle)
 
 using namespace std;
@@ -50,20 +52,24 @@ int main(int argc, char* argv[])
     const auto allowed_empty_frames_param = parser.get<int>("empty");
     const auto video_input_file = parser.get<std::string>("video");
 
-    VideoCapture cap = (video_input_file != "") ? VideoCapture(video_input_file) : VideoCapture(device_number);
+    const bool streaming = video_input_file == "";
 
-    // settings
-    cap.set(CV_CAP_PROP_FRAME_WIDTH, frame_width);
-    cap.set(CV_CAP_PROP_FRAME_HEIGHT, frame_height);
+    VideoCapture cap = streaming ? VideoCapture(device_number) : VideoCapture(video_input_file);
 
-    std::cout << "Set width: " << cap.get(CV_CAP_PROP_FRAME_WIDTH) << std::endl;
-    std::cout << "Set height: " << cap.get(CV_CAP_PROP_FRAME_HEIGHT) << std::endl;
-
-    if(!cap.isOpened())  // check if we succeeded
+    if(streaming)
     {
-        std::cout << "Device " << device_number << " not found\n";
-        return EXIT_FAILURE;
+        cap.set(CV_CAP_PROP_FRAME_WIDTH, frame_width);
+        cap.set(CV_CAP_PROP_FRAME_HEIGHT, frame_height);
+
+        if(!cap.isOpened())  // check if we succeeded
+        {
+            std::cout << "Device " << device_number << " not found\n";
+            return EXIT_FAILURE;
+        }
     }
+
+    std::cout << "Image width: " << cap.get(CV_CAP_PROP_FRAME_WIDTH) << std::endl;
+    std::cout << "Image height: " << cap.get(CV_CAP_PROP_FRAME_HEIGHT) << std::endl;
 
     Mat src, gray, edges, bg, diff;
     bool acorn_shape_detected = false;
@@ -73,7 +79,7 @@ int main(int argc, char* argv[])
 
     OrientationDetectionFsm fsm;
     fsm.initialize();
-    fsm.setAllowedEmptyFrames(allowed_empty_frames_param);
+    fsm.set_allowed_empty_frames(allowed_empty_frames_param);
 
     while(cap.read(src)) // get a new frame from camera
     {
@@ -83,8 +89,6 @@ int main(int argc, char* argv[])
         // Detect edges using Canny
         Canny(diff, edges, canny_threshold, upper_canny_threshold, sobel_kernel_size);
 
-//        imshow("Preview", src);
-//        imshow("Gray", gray);
         imshow("Edges", edges);
 
         vector<Vec4i> hierarchy;
@@ -112,14 +116,9 @@ int main(int argc, char* argv[])
             Moments mu = moments(contours[i], false);
             double hu[HU_MOMENTS_NUM];
             HuMoments(mu, hu);
-
-//            std::cout << "Hu invariants for contour:\n";
-//            for( int j = 0; j < HU_MOMENTS_NUM; j++ )
-//                std::cout << "[" << j+1 << "] = " << hu[j] << " ";
-//            std::cout << '\n';
         }
 
-        int orientation = LEFT_ORIENTED; //TODO: exchange it with SVM decision
+        Orientation orientation = LEFT_ORIENTED; //TODO: update it with SVM decision
 
         if(acorn_shape_detected)
         {

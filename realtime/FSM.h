@@ -2,18 +2,13 @@
 #define __FSM__
 
 #include "../modules/tinyfsm.hpp"
+#include "Events.h"
 #include "Voter.h"
-
-struct AcornDetected   : tinyfsm::Event {
-    AcornDetected(int orient) : orientation(orient) {}
-    int orientation;
-};
-struct AcornMissing : tinyfsm::Event { };
 
 class OrientationDetectionFsm : public tinyfsm::Fsm<OrientationDetectionFsm>
 {
 public:
-    void setAllowedEmptyFrames(int size);
+    void set_allowed_empty_frames(int size);
 
     virtual ~OrientationDetectionFsm() = default;
     virtual void react(AcornDetected const& e);
