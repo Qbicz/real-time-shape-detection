@@ -7,6 +7,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/core/core.hpp>
 
+#include "FrameSupplier.h"
 #include "Events.h"
 #include "FSM.h"
 
@@ -67,6 +68,9 @@ int main(int argc, char* argv[])
             return EXIT_FAILURE;
         }
     }
+
+    FrameSupplier frame_supplier;
+    frame_supplier.start();
 
     std::cout << "Image width: " << cap.get(CV_CAP_PROP_FRAME_WIDTH) << std::endl;
     std::cout << "Image height: " << cap.get(CV_CAP_PROP_FRAME_HEIGHT) << std::endl;

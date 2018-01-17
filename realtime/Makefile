@@ -1,6 +1,6 @@
 CXX=g++
 CXXFLAGS= `pkg-config --cflags opencv` -std=c++14
-LIBS=`pkg-config --libs opencv`
+LIBS=`pkg-config --libs opencv` -lpthread
 # --cflags
 DEPS = 
 OBJ = realtime.o FSM.o Voter.o
