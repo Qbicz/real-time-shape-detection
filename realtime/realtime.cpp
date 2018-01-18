@@ -69,9 +69,6 @@ int main(int argc, char* argv[])
         }
     }
 
-    FrameSupplier frame_supplier;
-    frame_supplier.start();
-
     std::cout << "Image width: " << cap.get(CV_CAP_PROP_FRAME_WIDTH) << std::endl;
     std::cout << "Image height: " << cap.get(CV_CAP_PROP_FRAME_HEIGHT) << std::endl;
 
@@ -85,8 +82,25 @@ int main(int argc, char* argv[])
     fsm.initialize();
     fsm.set_allowed_empty_frames(allowed_empty_frames_param);
 
-    while(cap.read(src)) // get a new frame from camera
+    //the object will hold the thread inside.
+    //we use RAII so no need to manually join() the thread
+    FrameSupplier frame_supplier(cap, fps);
+    frame_supplier.start();
+
+    while (true)
     {
+        std::unique_lock<std::mutex> lk(mx);
+
+        cvar.wait(lk, [&]{ return (!framesBuffer.empty() || !frame_supplier.capturing()); });
+
+        if(framesBuffer.empty())
+            break;
+
+        src = framesBuffer.front();
+        framesBuffer.pop();
+
+        lk.unlock();
+
         cvtColor(src, gray, COLOR_BGR2GRAY);
         absdiff(gray, bg, diff);
 
@@ -132,9 +146,6 @@ int main(int argc, char* argv[])
         {
             fsm.dispatch(AcornMissing());
         }
-
-
-        if(waitKey(1000 / fps) >= 0) break;
     }
 
     return EXIT_SUCCESS;
