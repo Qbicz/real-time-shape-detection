@@ -4,16 +4,12 @@
 #include <string>
 
 #include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/core/core.hpp>
 
 #include "FrameProcessor.h"
-#include "Events.h"
 #include "FSM.h"
 
 FSM_INITIAL_STATE(OrientationDetectionFsm, Idle)
 
-using namespace std;
 using namespace cv;
 
 int main(int argc, char* argv[])
@@ -70,35 +66,29 @@ int main(int argc, char* argv[])
     std::cout << "Image width: " << cap.get(CV_CAP_PROP_FRAME_WIDTH) << std::endl;
     std::cout << "Image height: " << cap.get(CV_CAP_PROP_FRAME_HEIGHT) << std::endl;
 
-    Mat src, gray, edges, background, diff;
     bool acorn_shape_detected = false;
 
+    Mat src;
     cap.read(src);
-    cvtColor(src, background, COLOR_BGR2GRAY);
 
     OrientationDetectionFsm fsm;
     fsm.initialize();
     fsm.set_allowed_empty_frames(allowed_empty_frames_param);
 
     ProcessingParams params {canny_threshold, upper_canny_threshold, sobel_kernel_size};
-    FrameProcessor processor(fsm, background, params);
-    //the FrameProcessor object will hold the thread inside.
+    FrameProcessor processor(fsm, src, params);
+    //the FrameProcessor object will hold new thread inside.
     //we use RAII so no need to manually join() the thread
 
     while(cap.read(src))
     {
-        {
-            std::lock_guard<std::mutex> lk(mx);
-            framesBuffer.emplace(src);
-        }
-
-        cvar.notify_one();
+        processor.push_frame(src);
 
         if(waitKey(1000 / fps) == 'q') break;
     }
 
     processor.signal_capture_end();
-    cvar.notify_one();
+    synchro::cvar.notify_one();
 
     return EXIT_SUCCESS;
 }

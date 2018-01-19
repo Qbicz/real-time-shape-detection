@@ -1,27 +1,43 @@
 #include "FrameProcessor.h"
 
+#include <opencv2/highgui/highgui.hpp>
+#include <opencv2/imgproc/imgproc.hpp>
+
 #include "Events.h"
 #include "FSM.h"
 
 constexpr int HU_MOMENTS_NUM = 7;
 
-std::queue<Mat> framesBuffer;
-std::mutex mx;
-std::condition_variable cvar;
+std::mutex synchro::mx;
+std::condition_variable synchro::cvar;
 
-FrameProcessor::FrameProcessor(OrientationDetectionFsm& fsm, const Mat& background, const ProcessingParams& params)
+using namespace synchro;
+using namespace cv;
+
+FrameProcessor::FrameProcessor(OrientationDetectionFsm& fsm, const Mat& src_background, const ProcessingParams& params)
     : fsm(fsm),
-      bg(background),
       canny_threshold(params.canny_threshold),
       upper_canny_threshold(params.upper_canny_threshold),
       sobel_kernel_size(params.sobel_kernel_size)
 {
+    cvtColor(src_background, bg, COLOR_BGR2GRAY);
+
     the_thread = std::thread(&FrameProcessor::main_thread, this);
 }
 
 void FrameProcessor::signal_capture_end()
 {
     capture_ended = true;
+}
+
+void FrameProcessor::push_frame(const Mat& captured_frame)
+{
+    {
+        std::lock_guard<std::mutex> lk(mx);
+        framesBuffer.emplace(captured_frame);
+    }
+
+    cvar.notify_one();
 }
 
 void FrameProcessor::main_thread()
@@ -92,7 +108,8 @@ void FrameProcessor::main_thread()
     }
 }
 
-FrameProcessor::~FrameProcessor() {
+FrameProcessor::~FrameProcessor()
+{
     if(the_thread.joinable())
          the_thread.join();
 }
