@@ -7,7 +7,7 @@
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/core/core.hpp>
 
-#include "FrameSupplier.h"
+#include "FrameProcessor.h"
 #include "Events.h"
 #include "FSM.h"
 
@@ -15,8 +15,6 @@ FSM_INITIAL_STATE(OrientationDetectionFsm, Idle)
 
 using namespace std;
 using namespace cv;
-
-constexpr int HU_MOMENTS_NUM = 7;
 
 int main(int argc, char* argv[])
 {
@@ -72,81 +70,35 @@ int main(int argc, char* argv[])
     std::cout << "Image width: " << cap.get(CV_CAP_PROP_FRAME_WIDTH) << std::endl;
     std::cout << "Image height: " << cap.get(CV_CAP_PROP_FRAME_HEIGHT) << std::endl;
 
-    Mat src, gray, edges, bg, diff;
+    Mat src, gray, edges, background, diff;
     bool acorn_shape_detected = false;
 
     cap.read(src);
-    cvtColor(src, bg, COLOR_BGR2GRAY);
+    cvtColor(src, background, COLOR_BGR2GRAY);
 
     OrientationDetectionFsm fsm;
     fsm.initialize();
     fsm.set_allowed_empty_frames(allowed_empty_frames_param);
 
-    //the object will hold the thread inside.
+    ProcessingParams params {canny_threshold, upper_canny_threshold, sobel_kernel_size};
+    FrameProcessor processor(fsm, background, params);
+    //the FrameProcessor object will hold the thread inside.
     //we use RAII so no need to manually join() the thread
-    FrameSupplier frame_supplier(cap, fps);
-    frame_supplier.start();
 
-    while (true)
+    while(cap.read(src))
     {
-        std::unique_lock<std::mutex> lk(mx);
-
-        cvar.wait(lk, [&]{ return (!framesBuffer.empty() || !frame_supplier.capturing()); });
-
-        if(framesBuffer.empty())
-            break;
-
-        src = framesBuffer.front();
-        framesBuffer.pop();
-
-        lk.unlock();
-
-        cvtColor(src, gray, COLOR_BGR2GRAY);
-        absdiff(gray, bg, diff);
-
-        // Detect edges using Canny
-        Canny(diff, edges, canny_threshold, upper_canny_threshold, sobel_kernel_size);
-
-        imshow("Edges", edges);
-
-        vector<Vec4i> hierarchy;
-        vector<vector<Point> > contours;
-        findContours(edges, contours, hierarchy, CV_RETR_EXTERNAL/*CV_RETR_LIST*/, CV_CHAIN_APPROX_NONE);
-        acorn_shape_detected = false;
-
-        for (size_t i = 0; i < contours.size(); ++i)
         {
-            // Calculate the area of each contour
-            double area = contourArea(contours[i]);
-            // Fix contours that are too small or too large
-            const int imageArea = edges.rows * edges.cols;
-
-            if (area / imageArea < 0.001)
-            {
-                continue;
-            }
-            else
-            {
-                acorn_shape_detected = true;
-            }
-
-            // Compute Hu moments the filled shape
-            Moments mu = moments(contours[i], false);
-            double hu[HU_MOMENTS_NUM];
-            HuMoments(mu, hu);
+            std::lock_guard<std::mutex> lk(mx);
+            framesBuffer.emplace(src);
         }
 
-        Orientation orientation = LEFT_ORIENTED; //TODO: update it with SVM decision
+        cvar.notify_one();
 
-        if(acorn_shape_detected)
-        {
-            fsm.dispatch(AcornDetected(orientation));
-        }
-        else
-        {
-            fsm.dispatch(AcornMissing());
-        }
+        if(waitKey(1000 / fps) == 'q') break;
     }
+
+    processor.signal_capture_end();
+    cvar.notify_one();
 
     return EXIT_SUCCESS;
 }
