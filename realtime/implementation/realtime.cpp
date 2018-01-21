@@ -4,18 +4,13 @@
 #include <string>
 
 #include <opencv2/highgui/highgui.hpp>
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/core/core.hpp>
 
-#include "Events.h"
+#include "FrameProcessor.h"
 #include "FSM.h"
 
 FSM_INITIAL_STATE(OrientationDetectionFsm, Idle)
 
-using namespace std;
 using namespace cv;
-
-constexpr int HU_MOMENTS_NUM = 7;
 
 int main(int argc, char* argv[])
 {
@@ -71,67 +66,29 @@ int main(int argc, char* argv[])
     std::cout << "Image width: " << cap.get(CV_CAP_PROP_FRAME_WIDTH) << std::endl;
     std::cout << "Image height: " << cap.get(CV_CAP_PROP_FRAME_HEIGHT) << std::endl;
 
-    Mat src, gray, edges, bg, diff;
     bool acorn_shape_detected = false;
 
+    Mat src;
     cap.read(src);
-    cvtColor(src, bg, COLOR_BGR2GRAY);
 
     OrientationDetectionFsm fsm;
     fsm.initialize();
     fsm.set_allowed_empty_frames(allowed_empty_frames_param);
 
-    while(cap.read(src)) // get a new frame from camera
+    ProcessingParams params {canny_threshold, upper_canny_threshold, sobel_kernel_size};
+    FrameProcessor processor(fsm, src, params);
+    //the FrameProcessor object will hold new thread inside.
+    //we use RAII so no need to manually join() the thread
+
+    while(cap.read(src))
     {
-        cvtColor(src, gray, COLOR_BGR2GRAY);
-        absdiff(gray, bg, diff);
+        processor.push_frame(src);
 
-        // Detect edges using Canny
-        Canny(diff, edges, canny_threshold, upper_canny_threshold, sobel_kernel_size);
-
-        imshow("Edges", edges);
-
-        vector<Vec4i> hierarchy;
-        vector<vector<Point> > contours;
-        findContours(edges, contours, hierarchy, CV_RETR_EXTERNAL/*CV_RETR_LIST*/, CV_CHAIN_APPROX_NONE);
-        acorn_shape_detected = false;
-
-        for (size_t i = 0; i < contours.size(); ++i)
-        {
-            // Calculate the area of each contour
-            double area = contourArea(contours[i]);
-            // Fix contours that are too small or too large
-            const int imageArea = edges.rows * edges.cols;
-
-            if (area / imageArea < 0.001)
-            {
-                continue;
-            }
-            else
-            {
-                acorn_shape_detected = true;
-            }
-
-            // Compute Hu moments the filled shape
-            Moments mu = moments(contours[i], false);
-            double hu[HU_MOMENTS_NUM];
-            HuMoments(mu, hu);
-        }
-
-        Orientation orientation = LEFT_ORIENTED; //TODO: update it with SVM decision
-
-        if(acorn_shape_detected)
-        {
-            fsm.dispatch(AcornDetected(orientation));
-        }
-        else
-        {
-            fsm.dispatch(AcornMissing());
-        }
-
-
-        if(waitKey(1000 / fps) >= 0) break;
+        if(waitKey(1000 / fps) == 'q') break;
     }
+
+    processor.signal_capture_end();
+    synchro::cvar.notify_one();
 
     return EXIT_SUCCESS;
 }

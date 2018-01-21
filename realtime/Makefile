@@ -1,21 +1,17 @@
 CXX=g++
-CXXFLAGS= `pkg-config --cflags opencv` -std=c++14
-LIBS=`pkg-config --libs opencv`
+CXXFLAGS= `pkg-config --cflags opencv` -std=c++14 -I./interface -I../modules
+LIBS=`pkg-config --libs opencv` -lpthread
 # --cflags
 DEPS = 
-OBJ = realtime.o FSM.o Voter.o
+OBJ = implementation/realtime.o implementation/FSM.o implementation/Voter.o implementation/FrameProcessor.o
 
 all: welcome realtime
 	
-%.o: %.cpp $(DEPS)
-	@echo Compiling $< with $(CXX)...
-	$(CXX) -c -o $@ $< $(CXXFLAGS)
-
 realtime: $(OBJ)
 	$(CXX) -o $@ $^ $(LIBS)
 
 clean:
-	rm -f *.o *~
+	rm -f implementation/*.o realtime
 	
 welcome:
 	@echo ---------- Acorn Orientation -------------
