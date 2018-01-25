@@ -84,6 +84,7 @@ int main(int argc, char* argv[])
     {
         processor.push_frame(src);
 
+        imshow("Frame", src);
         if(waitKey(1000 / fps) == 'q') break;
     }
 

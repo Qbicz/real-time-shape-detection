@@ -1,10 +1,13 @@
-#include "FrameProcessor.h"
+#include <iostream>
 
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
 
+#include "FrameProcessor.h"
 #include "Events.h"
 #include "FSM.h"
+
+#include "center_of_mass.h"
 
 constexpr int HU_MOMENTS_NUM = 7;
 
@@ -42,6 +45,8 @@ void FrameProcessor::push_frame(const Mat& captured_frame)
 
 void FrameProcessor::main_thread()
 {
+    std::cout << "main_thread\n";
+
     while(true)
     {
         std::unique_lock<std::mutex> lk(mx);
@@ -58,46 +63,37 @@ void FrameProcessor::main_thread()
 
         lk.unlock();
 
-        Mat gray, diff, edges;
+        bool acorn_detected = false;
 
-        cvtColor(src, gray, COLOR_BGR2GRAY);
-        absdiff(gray, bg, diff);
+        // Args
+        int label;
+        const bool label_images = false;
+        const bool show_images = true;
 
-        // Detect edges using Canny
-        Canny(diff, edges, canny_threshold, upper_canny_threshold, sobel_kernel_size);
+        //
+        // Feature
+        //
+        Mat gray_image;
+        cvtColor(src, gray_image, COLOR_BGR2GRAY);
 
-        imshow("Edges", edges);
+        // Subtract background to remove not interesting objects
+        Mat diff(gray_image);
+        absdiff(gray_image, this->bg, diff);
 
-        vector<Vec4i> hierarchy;
-        vector<vector<Point> > contours;
-        findContours(edges, contours, hierarchy, CV_RETR_EXTERNAL/*CV_RETR_LIST*/, CV_CHAIN_APPROX_NONE);
-        bool acorn_shape_detected = false;
-
-        for (size_t i = 0; i < contours.size(); ++i)
+        float center_of_mass_position = center_of_mass_position_compute(diff, canny_threshold, upper_canny_threshold, label, sobel_kernel_size, label_images, show_images, acorn_detected);
+        if (acorn_detected)
         {
-            // Calculate the area of each contour
-            double area = contourArea(contours[i]);
-            // Fix contours that are too small or too large
-            const int imageArea = edges.rows * edges.cols;
-
-            if (area / imageArea < 0.001)
-            {
-                continue;
-            }
-            else
-            {
-                acorn_shape_detected = true;
-            }
-
-            // Compute Hu moments the filled shape
-            Moments mu = moments(contours[i], false);
-            double hu[HU_MOMENTS_NUM];
-            HuMoments(mu, hu);
+            std::cout << "Center of mass position: " << center_of_mass_position << "\n";
         }
+
+        //
+        // Recognition
+        //
+
 
         Orientation orientation = Orientation::LEFT_ORIENTED;
 
-        if(acorn_shape_detected)
+        if(acorn_detected)
         {
             fsm.dispatch(AcornDetected(orientation));
         }
