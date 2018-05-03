@@ -8,7 +8,7 @@
 #include <opencv2/core/core.hpp>
 
 #include <json.hpp>
-#include "print_vector.h"
+#include "vector_op.h"
 
 #define HU_MOMENTS_NUM  7
 
@@ -148,45 +148,27 @@ hu_moments_t hu_moments_compute(const Mat& src, const int canny_threshold, const
 
         if (area / imageArea < 0.001)
         {
-            std::cout << "Area too small for contour, trying convex hull...\n";
+            std::cout << "Area too small for contour.\n";
 
             continue;
         }
 
         std::cout << "area = " << area << " for contour " << i << '\n';
 
-        /* Prepare empty image on which the shape will be drawn.
-           The image will be used by cv::moments() and thus has to be
-           1-channel or with the channel of interest selected. */
-        Mat shape(gray_image);
-        shape = (Scalar(0,0,0));
-        // Function fillPoly() expects an array of polygons - we pass only one polygon
-        const Point* contour_vertices[1] = {&contours[i][0]};
-        int vertices_num[1] = {static_cast<int>(contours[i].size())};
-        // Get shape by filling a contour
-        fillPoly(shape, contour_vertices, vertices_num, 1, Scalar(255, 255, 255));
-
         if(show_images_cli_arg)
         {
             if(label_images_cli_arg)
             {
-                namedWindow("Filled contour", WINDOW_NORMAL);
-                imshow("Filled contour", shape);
-                waitKey(100);
-
+                imshow("Filled contour", diff);
+                waitKey(50);
                 std::cout << "Please provide orientation for acorn\n";
-                std::cout << "1: left, -1: right, 0: no decision\n";
+                std::cout << "1: right, -1: left, 0: no decision\n";
                 std::cin >> label;
-            }
-            else
-            {
-                imshow("Filled contour", shape);
-                waitKey(0);
             }
         }
 
         // Compute Hu moments the filled shape
-        Moments mu = moments( shape, false );
+        Moments mu = moments(contours[i], true);
         double hu[HU_MOMENTS_NUM];
         HuMoments(mu, hu);
 

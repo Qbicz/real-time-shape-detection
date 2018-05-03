@@ -2,8 +2,10 @@
 #include <iostream>
 using namespace std;
 using namespace cv;
-int main(int, char** argv)
+int main(int argc, char** argv)
 {
+    if(argc < 2)
+        return 1;
     // Load the image
     Mat src = imread(argv[1]);
     // Check if everything was fine

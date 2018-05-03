@@ -2,6 +2,8 @@
 Project goal: use GPU on ODROID-XU4 and OpenCL acceleration to achieve real time shape and orientation detection of fast moving objects.
 Part of system for automatic segregation of seeds in an arboretum.
 
+
+
 # Run code on Ubuntu using your webcam
 First, please install OpenCV 2.4
 ```bash
@@ -19,7 +21,7 @@ Run the application using default camera (usually webcam).
 You will see that in the video stream from camera the application finds an object, shows its bounding box and computes the orientation. Orientation direction is shown in form of arrows.
 
 Example output of the algorithm running on ODROID-XU4 minicomputer with Basler acA2000-165um high-speed camera:
-<img src="https://raw.githubusercontent.com/Qbicz/real-time-shape-detection/master/report/real-moving-PCA.png", alt="Contours and orientation of a moving seed" width="400">
+<img src="https://github.com/Qbicz/real-time-shape-detection/tree/master/report/pr16wsw503/find_orientation.png", alt="Contours and orientation of a moving seed" width="400">
 
 # OpenCL support on ODROID-XU4 with Ubuntu
 Install https://developer.arm.com/technologies/compute-library
