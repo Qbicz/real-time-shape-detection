@@ -21,7 +21,8 @@ Run the application using default camera (usually webcam).
 You will see that in the video stream from camera the application finds an object, shows its bounding box and computes the orientation. Orientation direction is shown in form of arrows.
 
 Example output of the algorithm running on ODROID-XU4 minicomputer with Basler acA2000-165um high-speed camera:
-[[https://github.com/Qbicz/real-time-shape-detection/tree/master/report/pr16wsw503/find_orientation.png"|alt="Contours and orientation of a moving seed"]]
+
+![Contours and orientation of a moving seed](report/pr16wsw503/find_orientation.png)
 
 # OpenCL support on ODROID-XU4 with Ubuntu
 Install https://developer.arm.com/technologies/compute-library
