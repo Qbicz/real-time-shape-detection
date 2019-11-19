@@ -1,8 +1,13 @@
 # real-time-shape-detection
 Project goal: use GPU on ODROID-XU4 and OpenCL acceleration to achieve real time shape and orientation detection of fast moving objects.
-Part of system for automatic segregation of seeds in an arboretum.
 
+Part of system for automatic scarification and segregation of acorn seeds in an arboretum. Project done at the AGH University of Science and Technology.
 
+Repository contains programs for detecting moving seed in a video stream. There is version for:
+* embedded system ODROID-XU4 running Debian/Ubuntu with Basler industrial camera
+* PC computer with default USB webcam
+
+Repository also contains code for computing Hu moments and SVM classification of detected objects.
 
 # Run code on Ubuntu using your webcam
 First, please install OpenCV 2.4
