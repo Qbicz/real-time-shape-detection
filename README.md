@@ -23,7 +23,7 @@ Run the application using default camera (usually webcam).
 ```bash
 ./capture
 ```
-You will see that in the video stream from camera the application finds an object, shows its bounding box and computes the orientation. Orientation direction is shown in form of arrows.
+You will see that in the video stream from camera the application finds an object, shows its detected contour and computes the orientation. Orientation direction is shown in form of arrows.
 
 Example output of the algorithm running on ODROID-XU4 minicomputer with Basler acA2000-165um high-speed camera:
 
